@@ -9,8 +9,6 @@ Where possible, the toolwill highlight where the statistics are outside the norm
 
 ![IRITopScreenshot](https://raw.githubusercontent.com/maeck70/iritop/master/img/IRITop.png)
 
-iritop/img/IRITop.png      
-
 Usage:
 - Start without a --node argument will assume 'http://localhost:14265' as the node address for the web service calls.
 - Provide an address using --node http://myirinode:14265 if you want to specify a specific address.
