@@ -7,7 +7,9 @@ The Monitoring tool will show basic information on the node like version, milest
 
 Where possible, the toolwill highlight where the statistics are outside the norm by highlighting in yellow or red.
 
-![IRITopScreenshot](maeck70.github.com/iritop/img/IRITop.png)
+![IRITopScreenshot](https://raw.githubusercontent.com/maeck70/iritop/master/img/IRITop.png)
+
+iritop/img/IRITop.png      
 
 Usage:
 - Start without a --node argument will assume 'http://localhost:14265' as the node address for the web service calls.
