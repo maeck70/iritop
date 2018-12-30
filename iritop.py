@@ -95,6 +95,25 @@ def show_histogram(row, col, label, value, value_max, warning_limit = 0.8, span 
 			+ term.white("]"))
 
 
+def show_neighbors(row):
+		height, width = term.height, term.width
+		cw = width // 9
+
+		print(term.move(row, 0 * cw) + term.black_on_green("Neighbor Address".ljust(cw*3)))
+		print(term.move(row, 3 * cw) + term.black_on_green("All tx".rjust(cw)))
+		print(term.move(row, 4 * cw) + term.black_on_green("Invalid tx".rjust(cw)))
+		print(term.move(row, 5 * cw) + term.black_on_green("New tx".rjust(cw)))
+		print(term.move(row, 6 * cw) + term.black_on_green("Random tx".rjust(cw)))
+		print(term.move(row, 7 * cw) + term.black_on_green("Sent tx".rjust(cw)))
+		print(term.move(row, 8 * cw) + term.black_on_green("Stale tx".rjust(cw)))
+
+		row += 1
+		for n in neighbors['neighbors']:
+			show_neighbor(row, n, cw, height)
+			row += 1
+
+
+
 def show_neighbor(row, neighbor, column_width, height):
 
 	if row < height:
@@ -214,22 +233,7 @@ with term.fullscreen():
 		print(term.move(5, 0) + term.cyan("Node Address: ") + term.bright_cyan(url))
 
 
-		row = 7
-		cw = width // 9
-
-		print(term.move(row, 0 * cw) + term.black_on_green("Neighbor Address".ljust(cw*3)))
-		print(term.move(row, 3 * cw) + term.black_on_green("All tx".rjust(cw)))
-		print(term.move(row, 4 * cw) + term.black_on_green("Invalid tx".rjust(cw)))
-		print(term.move(row, 5 * cw) + term.black_on_green("New tx".rjust(cw)))
-		print(term.move(row, 6 * cw) + term.black_on_green("Random tx".rjust(cw)))
-		print(term.move(row, 7 * cw) + term.black_on_green("Sent tx".rjust(cw)))
-		print(term.move(row, 8 * cw) + term.black_on_green("Stale tx".rjust(cw)))
-
-		row += 1
-		for n in neighbors['neighbors']:
-			show_neighbor(row, n, cw, height)
-			row += 1
-
+		show_neighbors(7)
 
 		val = term.inkey(timeout = blink_delay)
 
