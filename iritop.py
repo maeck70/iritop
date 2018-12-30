@@ -10,6 +10,7 @@ import pycurl
 import certifi
 from io import BytesIO
 from urllib.parse import urlencode
+from datetime import timedelta
 
 
 prev = {}
@@ -226,7 +227,7 @@ with term.fullscreen():
 		mb = 1024*1024
 		height, width = term.height, term.width
 
-		print(term.move(0, 0) + term.black_on_cyan("IRITop - Simple IRI Node Monitor".ljust(width)))
+		print(term.move(0, 0) + term.black_on_cyan("IRITop - Simple IOTA IRI Node Monitor".ljust(width)))
 
 		show(1, 0, "appName", node, "appName")
 		show(2, 0, "appVersion", node, "appVersion")
@@ -242,8 +243,10 @@ with term.fullscreen():
 		show(4, 1, "tips", node, "tips")
 		show(4, 2, "txToRequest", node, "transactionsToRequest")
 
-		print(term.move(5, 0) + term.cyan("Node Address: ") + term.bright_cyan(args.node))
-
+		show(5, 2, "jreVersion", node, "jreVersion")
+		show_string(5, 0, "Node Address", args.node)
+		
+		#print(term.move(5, 0) + term.cyan("Node Address: ") + term.bright_cyan(args.node))
 
 		show_neighbors(7)
 
