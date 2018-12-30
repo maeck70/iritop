@@ -100,10 +100,10 @@ def show_neighbors(row):
 
 		print(term.move(row, 0 * cw) + term.black_on_green("Neighbor Address".ljust(cw*3)))
 		print(term.move(row, 3 * cw) + term.black_on_green("All tx".rjust(cw)))
-		print(term.move(row, 4 * cw) + term.black_on_green("Invalid tx".rjust(cw)))
-		print(term.move(row, 5 * cw) + term.black_on_green("New tx".rjust(cw)))
+		print(term.move(row, 4 * cw) + term.black_on_green("New tx".rjust(cw)))
+		print(term.move(row, 5 * cw) + term.black_on_green("Sent tx".rjust(cw)))
 		print(term.move(row, 6 * cw) + term.black_on_green("Random tx".rjust(cw)))
-		print(term.move(row, 7 * cw) + term.black_on_green("Sent tx".rjust(cw)))
+		print(term.move(row, 7 * cw) + term.black_on_green("Invalid tx".rjust(cw)))
 		print(term.move(row, 8 * cw) + term.black_on_green("Stale tx".rjust(cw)))
 
 		row += 1
@@ -116,19 +116,23 @@ def show_neighbors(row):
 def show_neighbor(row, neighbor, column_width, height):
 
 	if row < height:
-		# at = str(neighbor['numberOfAllTransactions']).rjust(column_width)
-		# atd = str(neighbor['numberOfAllTransactionsDelta']).rjust(column_width)
+
+		addr = neighbor['connectionType'] + "://" + neighbor['address']
 		at = "%d (%d)" % (neighbor['numberOfAllTransactions'], neighbor['numberOfAllTransactionsDelta'])
 		at = at.rjust(column_width)
-		it = str(neighbor['numberOfInvalidTransactions']).rjust(column_width)
-		#nt = str(neighbor['numberOfNewTransactions']).rjust(column_width)
+		it = "%d (%d)" % (neighbor['numberOfInvalidTransactions'], neighbor['numberOfInvalidTransactionsDelta'])
+		it = it.rjust(column_width)
 		nt = "%d (%d)" % (neighbor['numberOfNewTransactions'], neighbor['numberOfNewTransactionsDelta'])
 		nt = nt.rjust(column_width)
+		rt = "%d (%d)" % (neighbor['numberOfRandomTransactionRequests'], neighbor['numberOfRandomTransactionRequestsDelta'])
+		rt = rt.rjust(column_width)
+		st = "%d (%d)" % (neighbor['numberOfSentTransactions'], neighbor['numberOfSentTransactionsDelta'])
+		st = st.rjust(column_width)
+		xt = "%d (%d)" % (neighbor['numberOfStaleTransactions'], neighbor['numberOfStaleTransactionsDelta'])
+		xt = xt.rjust(column_width)
 
-
-		rt = str(neighbor['numberOfRandomTransactionRequests']).rjust(column_width) 
-		st = str(neighbor['numberOfSentTransactions']).rjust(column_width)
-		xt = str(neighbor['numberOfStaleTransactions']).rjust(column_width)
+		if neighbor['numberOfAllTransactionsDelta'] == 0 and neighbor['numberOfAllTransactions'] > 0:
+			addr = term.bright_red(addr)
 
 		value_at = "neighbor-%s-at"  % neighbor['address']
 		if value_at in prev and neighbor['numberOfAllTransactions'] != prev[value_at]:
@@ -153,17 +157,17 @@ def show_neighbor(row, neighbor, column_width, height):
 			st = term.cyan(st)
 
 		if neighbor['numberOfStaleTransactions'] > 0:
-			xt = term.yellow(str(neighbor['numberOfStaleTransactions']).rjust(column_width)) 
+			xt = term.yellow(xt)
 		value_xt = "neighbor-%s-xt"  % neighbor['address']
 		if value_xt in prev and neighbor['numberOfStaleTransactions'] != prev[value_xt]:
 			xt = term.cyan(xt)
 
-		print(term.move(row, 0 * column_width) + term.white(neighbor['connectionType'] + " " + neighbor['address']))
+		print(term.move(row, 0 * column_width) + term.white(addr))
 		print(term.move(row, 3 * column_width) + term.green(at))
-		print(term.move(row, 4 * column_width) + term.green(it))
-		print(term.move(row, 5 * column_width) + term.green(nt))
+		print(term.move(row, 4 * column_width) + term.green(nt))
+		print(term.move(row, 5 * column_width) + term.green(st))
 		print(term.move(row, 6 * column_width) + term.green(rt))
-		print(term.move(row, 7 * column_width) + term.green(st))
+		print(term.move(row, 7 * column_width) + term.green(it))
 		print(term.move(row, 8 * column_width) + term.green(xt))
 
 		prev[value_at] = neighbor['numberOfAllTransactions']
@@ -172,6 +176,23 @@ def show_neighbor(row, neighbor, column_width, height):
 		prev[value_rt] = neighbor['numberOfRandomTransactionRequests']
 		prev[value_st] = neighbor['numberOfSentTransactions']
 		prev[value_xt] = neighbor['numberOfStaleTransactions']
+
+
+def historizer(txtype, wsid, hd, n):
+	nid = "%s-%s" % (n['address'], txtype)
+	nidd = "%s-%sd" % (n['address'], txtype)
+	c = n[wsid]
+	try:
+		p = hist[nid]
+		hd[nid] = c
+		if p > 0:
+			hd[nidd] = c - p
+		else:
+			hd[nidd] = 0
+	except KeyError:
+		hd[nid] = 0
+		hd[nidd] = 0
+	n["%sDelta" % wsid] = hd[nidd]
 
 
 
@@ -237,37 +258,12 @@ with term.fullscreen():
 			# Keep history of tx 
 			hd = {}
 			for n in neighbors['neighbors']:
-				# All tx
-				atnid = "%s-at" % n['address']
-				atnidd = "%s-atd" % n['address']
-				atc = n['numberOfAllTransactions']
-				try:
-					atp = hist[atnid]
-					hd[atnid] = atc
-					if atp > 0:
-						hd[atnidd] = atc - atp
-					else:
-						hd[atnidd] = 0
-				except KeyError:
-					hd[atnid] = 0
-					hd[atnidd] = 0
-				n['numberOfAllTransactionsDelta'] = hd[atnidd]
-
-				# New tx
-				ntnid = "%s-nt" % n['address']
-				ntnidd = "%s-ntd" % n['address']
-				ntc = n['numberOfNewTransactions']
-				try:
-					ntp = hist[ntnid]
-					hd[ntnid] = ntc
-					if ntp > 0:
-						hd[ntnidd] = ntc - ntp
-					else:
-						hd[ntnidd] = 0
-				except KeyError:
-					hd[ntnid] = 0
-					hd[ntnidd] = 0
-				n['numberOfNewTransactionsDelta'] = hd[ntnidd]
+				historizer('at', 'numberOfAllTransactions', hd, n)
+				historizer('nt', 'numberOfNewTransactions', hd, n)
+				historizer('st', 'numberOfSentTransactions', hd, n)
+				historizer('rt', 'numberOfRandomTransactionRequests', hd, n)
+				historizer('xt', 'numberOfStaleTransactions', hd, n)
+				historizer('it', 'numberOfInvalidTransactions', hd, n)
 
 			hist = hd
 
