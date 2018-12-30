@@ -3,6 +3,7 @@
 from __future__ import division
 from blessed import Terminal
 
+import argparse
 import time
 import json
 import pycurl
@@ -11,7 +12,7 @@ from io import BytesIO
 from urllib.parse import urlencode
 
 
-url = "http://node21.heliumsushi.com:14265"
+#url = "http://node21.heliumsushi.com:14265"
 
 prev = {}
 poll_delay = 2
@@ -169,7 +170,20 @@ def show_neighbor(row, neighbor, column_width, height):
 
 
 
-print("IRITop connection to node...")
+# initiate the parser
+parser = argparse.ArgumentParser()  
+parser.add_argument("-V", "--version", help="show program version", action="store_true")
+parser.add_argument("-n", "--node", help="set the node we are connecting with", default="http://localhost:14625")
+
+# read arguments from the command line
+args = parser.parse_args()
+
+# check for --version or -V
+if args.version:  
+    print("this is IRITop version 0.1")
+
+
+print("IRITop connection to node %s..." % args.node)
 
 term = Terminal()
 with term.fullscreen():
@@ -185,7 +199,7 @@ with term.fullscreen():
 			# --- getNodeInfo
 			buffer = BytesIO()
 			c = pycurl.Curl()
-			c.setopt(c.URL, url)
+			c.setopt(c.URL, args.node)
 			c.setopt(c.WRITEDATA, buffer)
 			c.setopt(c.HTTPHEADER, ['Content-Type: application/json','Accept-Charset: UTF-8', 'X-IOTA-API-Version: 1'])
 			c.setopt(c.POSTFIELDS, "{'command': 'getNodeInfo'}")
@@ -200,7 +214,7 @@ with term.fullscreen():
 			# --- getNeighbors
 			buffer = BytesIO()
 			c = pycurl.Curl()
-			c.setopt(c.URL, url)
+			c.setopt(c.URL, args.node)
 			c.setopt(c.WRITEDATA, buffer)
 			c.setopt(c.HTTPHEADER, ['Content-Type: application/json','Accept-Charset: UTF-8', 'X-IOTA-API-Version: 1'])
 			c.setopt(c.POSTFIELDS, "{'command': 'getNeighbors'}")
@@ -230,7 +244,7 @@ with term.fullscreen():
 		show(4, 1, "tips", node, "tips")
 		show(4, 2, "txToRequest", node, "transactionsToRequest")
 
-		print(term.move(5, 0) + term.cyan("Node Address: ") + term.bright_cyan(url))
+		print(term.move(5, 0) + term.cyan("Node Address: ") + term.bright_cyan(args.node))
 
 
 		show_neighbors(7)
