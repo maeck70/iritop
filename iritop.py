@@ -116,13 +116,16 @@ def show_neighbors(row):
 def show_neighbor(row, neighbor, column_width, height):
 
 	if row < height:
-		at = str(neighbor['numberOfAllTransactions']).rjust(column_width)
-		atd = str(neighbor['numberOfAllTransactionsDelta']).rjust(column_width)
-
+		# at = str(neighbor['numberOfAllTransactions']).rjust(column_width)
+		# atd = str(neighbor['numberOfAllTransactionsDelta']).rjust(column_width)
 		at = "%d (%d)" % (neighbor['numberOfAllTransactions'], neighbor['numberOfAllTransactionsDelta'])
 		at = at.rjust(column_width)
 		it = str(neighbor['numberOfInvalidTransactions']).rjust(column_width)
-		nt = str(neighbor['numberOfNewTransactions']).rjust(column_width)
+		#nt = str(neighbor['numberOfNewTransactions']).rjust(column_width)
+		nt = "%d (%d)" % (neighbor['numberOfNewTransactions'], neighbor['numberOfNewTransactionsDelta'])
+		nt = nt.rjust(column_width)
+
+
 		rt = str(neighbor['numberOfRandomTransactionRequests']).rjust(column_width) 
 		st = str(neighbor['numberOfSentTransactions']).rjust(column_width)
 		xt = str(neighbor['numberOfStaleTransactions']).rjust(column_width)
@@ -234,21 +237,38 @@ with term.fullscreen():
 			# Keep history of tx 
 			hd = {}
 			for n in neighbors['neighbors']:
-				nid = "%s-at" % n['address']
-				nidd = "%s-atd" % n['address']
+				# All tx
+				atnid = "%s-at" % n['address']
+				atnidd = "%s-atd" % n['address']
 				atc = n['numberOfAllTransactions']
 				try:
-					atp = hist[nid]
-					hd[nid] = atc
+					atp = hist[atnid]
+					hd[atnid] = atc
 					if atp > 0:
-						hd[nidd] = atc - atp
+						hd[atnidd] = atc - atp
 					else:
-						hd[nidd] = 0
+						hd[atnidd] = 0
 				except KeyError:
-					atp = 0
-					hd[nid] = 0
-					hd[nidd] = 0
-				n['numberOfAllTransactionsDelta'] = hd[nidd]
+					hd[atnid] = 0
+					hd[atnidd] = 0
+				n['numberOfAllTransactionsDelta'] = hd[atnidd]
+
+				# New tx
+				ntnid = "%s-nt" % n['address']
+				ntnidd = "%s-ntd" % n['address']
+				ntc = n['numberOfNewTransactions']
+				try:
+					ntp = hist[ntnid]
+					hd[ntnid] = ntc
+					if ntp > 0:
+						hd[ntnidd] = ntc - ntp
+					else:
+						hd[ntnidd] = 0
+				except KeyError:
+					hd[ntnid] = 0
+					hd[ntnidd] = 0
+				n['numberOfNewTransactionsDelta'] = hd[ntnidd]
+
 			hist = hd
 
 		mb = 1024*1024
