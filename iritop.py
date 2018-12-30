@@ -42,7 +42,7 @@ def show(row, col, label, dictionary, value):
 		vs = term.on_blue(vs)
 
 	print(term.move(row, x1) + term.cyan(label + ":"))
-	print(term.move(row, x2) + vs)
+	print(term.move(row, x2) + vs + "  ")
 
 	prev[value] = dictionary[value]
 
@@ -238,14 +238,12 @@ with term.fullscreen():
 		show(3, 1, "milestoneIndex", node, "latestMilestoneIndex")
 		show(3, 2, "milestoneSolid", node, "latestSolidSubtangleMilestoneIndex")
 
-		show(4, 0, "neighbors", node, "neighbors")
+		show(4, 0, "jreVersion", node, "jreVersion")
 		show(4, 1, "tips", node, "tips")
 		show(4, 2, "txToRequest", node, "transactionsToRequest")
 
-		show(5, 2, "jreVersion", node, "jreVersion")
 		show_string(5, 0, "Node Address", args.node)
-		
-		#print(term.move(5, 0) + term.cyan("Node Address: ") + term.bright_cyan(args.node))
+		show(5, 2, "neighbors", node, "neighbors")
 
 		show_neighbors(7)
 
