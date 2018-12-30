@@ -7,7 +7,6 @@ import argparse
 import time
 import json
 import pycurl
-import certifi
 from io import BytesIO
 from urllib.parse import urlencode
 from datetime import timedelta
