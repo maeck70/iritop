@@ -12,8 +12,6 @@ from io import BytesIO
 from urllib.parse import urlencode
 
 
-#url = "http://node21.heliumsushi.com:14265"
-
 prev = {}
 poll_delay = 2
 blink_delay = 0.5
@@ -173,7 +171,7 @@ def show_neighbor(row, neighbor, column_width, height):
 # initiate the parser
 parser = argparse.ArgumentParser()  
 parser.add_argument("-V", "--version", help="show program version", action="store_true")
-parser.add_argument("-n", "--node", help="set the node we are connecting with", default="http://localhost:14625")
+parser.add_argument("-n", "--node", help="set the node we are connecting with", default="http://localhost:14265")
 
 # read arguments from the command line
 args = parser.parse_args()
