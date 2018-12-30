@@ -192,11 +192,11 @@ with term.fullscreen():
 
 	val = ""
 	tlast = 0
-	history_index = 0
-	history_index_max = 3
-	hist = []
-	for a in range(history_index_max):
-		hist.append({})
+	# history_index = 0
+	# history_index_max = 3
+	hist = {}
+	# for a in range(history_index_max):
+	# 	hist.append({})
 
 	while val.lower() != 'q':
 
@@ -232,29 +232,24 @@ with term.fullscreen():
 			neighbors = json.loads(body)
 
 			# Keep history of tx 
-			hip = history_index
-			history_index += 1
-			if history_index == history_index_max:
-				history_index = 0
-			hic = history_index
-
 			hd = {}
 			for n in neighbors['neighbors']:
 				nid = "%s-at" % n['address']
 				nidd = "%s-atd" % n['address']
 				atc = n['numberOfAllTransactions']
 				try:
-					atp = hist[hip][nid]
+					atp = hist[nid]
 					hd[nid] = atc
-					hd[nidd] = atc - atp
+					if atp > 0:
+						hd[nidd] = atc - atp
+					else:
+						hd[nidd] = 0
 				except KeyError:
 					atp = 0
 					hd[nid] = 0
 					hd[nidd] = 0
 				n['numberOfAllTransactionsDelta'] = hd[nidd]
-			hist[hic] = hd
-			#print(term.move(20, 0) + str(hist[hic]['iota.aurafabricators.com:14600-atd']) + "      ")
-
+			hist = hd
 
 		mb = 1024*1024
 		height, width = term.height, term.width
