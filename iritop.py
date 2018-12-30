@@ -117,6 +117,10 @@ def show_neighbor(row, neighbor, column_width, height):
 
 	if row < height:
 		at = str(neighbor['numberOfAllTransactions']).rjust(column_width)
+		atd = str(neighbor['numberOfAllTransactionsDelta']).rjust(column_width)
+
+		at = "%d (%d)" % (neighbor['numberOfAllTransactions'], neighbor['numberOfAllTransactionsDelta'])
+		at = at.rjust(column_width)
 		it = str(neighbor['numberOfInvalidTransactions']).rjust(column_width)
 		nt = str(neighbor['numberOfNewTransactions']).rjust(column_width)
 		rt = str(neighbor['numberOfRandomTransactionRequests']).rjust(column_width) 
@@ -188,6 +192,11 @@ with term.fullscreen():
 
 	val = ""
 	tlast = 0
+	history_index = 0
+	history_index_max = 3
+	hist = []
+	for a in range(history_index_max):
+		hist.append({})
 
 	while val.lower() != 'q':
 
@@ -221,6 +230,30 @@ with term.fullscreen():
 
 			body = buffer.getvalue().decode('utf-8')
 			neighbors = json.loads(body)
+
+			# Keep history of tx 
+			hip = history_index
+			history_index += 1
+			if history_index == history_index_max:
+				history_index = 0
+			hic = history_index
+
+			hd = {}
+			for n in neighbors['neighbors']:
+				nid = "%s-at" % n['address']
+				nidd = "%s-atd" % n['address']
+				atc = n['numberOfAllTransactions']
+				try:
+					atp = hist[hip][nid]
+					hd[nid] = atc
+					hd[nidd] = atc - atp
+				except KeyError:
+					atp = 0
+					hd[nid] = 0
+					hd[nidd] = 0
+				n['numberOfAllTransactionsDelta'] = hd[nidd]
+			hist[hic] = hd
+			#print(term.move(20, 0) + str(hist[hic]['iota.aurafabricators.com:14600-atd']) + "      ")
 
 
 		mb = 1024*1024
