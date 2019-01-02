@@ -2,10 +2,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import division
 import argparse
+import re
 import os
 import sys
 import time
 import json
+import socket
 from io import BytesIO
 from datetime import timedelta
 from multiprocessing.pool import ThreadPool
@@ -62,7 +64,7 @@ def parse_args():
     parser.add_argument("-V", "--version", help="show program version",
                         action="store_true")
 
-    parser.add_argument("-n", "--node",
+    parser.add_argument("-n", "--node", type=url,
                         help="set the node we are connecting with. Default: "
                              "%(default)s",
                         default=NODE)
@@ -71,7 +73,7 @@ def parse_args():
                         help="node poll delay. Default: %(default)s",
                         default=2)
 
-    parser.add_argument("-b", "--blink-delay", type=int,
+    parser.add_argument("-b", "--blink-delay", type=float,
                         help="blink delay. Default: %(default)s",
                         default=0.5)
 
@@ -101,6 +103,22 @@ def main():
     iri_top.run()
 
 
+def url(url):
+    regex = re.compile(
+        r'^(?:http|ftp)s?://' # http:// or https://
+        r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|' # domain...
+        r'localhost|' # localhost...
+        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|' # ...or ipv4
+        r'\[?[A-F0-9]*:[A-F0-9:]+\]?)' # ...or ipv6
+        r'(?::\d+)?' # optional port
+        r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+
+    if regex.match(url):
+        return url
+    else:
+        raise argparse.ArgumentTypeError("Invalid node URL")
+
+
 def fetch_data(data):
     global NODE
     global HEADERS
@@ -117,9 +135,18 @@ def fetch_data(data):
     response = None
     try:
         response = urllib2.urlopen(request, timeout=URL_TIMEOUT)
-        return json.loads(response.read()), None
+    except urllib2.HTTPError as e:
+        msg = e.read()
+        return None, 'Request failed with code: %d, response: %s' % (e.code,
+                                                                     msg)
+    except urllib2.URLError as e:
+        return None, 'Request failed'
+    except socket.timeout as e:
+        return None, 'Request timed out'
     except Exception as e:
-        return None, e
+        return None, 'Unknown error'
+
+    return json.loads(response.read()), None
 
 
 class IriTop:
