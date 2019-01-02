@@ -12,6 +12,9 @@ from io import BytesIO
 from datetime import timedelta
 from multiprocessing.pool import ThreadPool
 
+
+__VERSION__ = 0.1
+
 """
 Simple Iota IRI Node Monitor
 
