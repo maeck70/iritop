@@ -136,7 +136,6 @@ class IriTop:
 
         _ = os.system('clear')
 
-        #with self.term.fullscreen():
         with self.term.cbreak():
 	    val = ""
 	    tlast = 0
