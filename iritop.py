@@ -8,8 +8,6 @@ import sys
 import time
 import json
 import socket
-from io import BytesIO
-from datetime import timedelta
 from multiprocessing.pool import ThreadPool
 
 
@@ -20,8 +18,9 @@ Simple Iota IRI Node Monitor
 
 This is a simple monitor that runs from the command line.
 Typically this is run on the IRI node itself, however,
-as soon as the node is allowed to externally expose getNodeInfo and getNeighbors information,
-then this tool can be run from a remote shell as well.
+as soon as the node is allowed to externally expose
+getNodeInfo and getNeighbors information, then this tool
+can be run from a remote shell as well.
 """
 
 
@@ -38,11 +37,6 @@ except ImportError:
     sys.stderr.write("Missing python blessed package? Install via 'pip install"
                      " blessed'\n")
     sys.exit(1)
-
-try:
-    from urllib.parse import urlparse
-except ImportError:
-     from urlparse import urlparse
 
 
 # Url request timeout
@@ -95,7 +89,7 @@ def main():
     # check for --version or -V
     if args.version:
         print("this is IRITop version %s" % __VERSION__)
-        sys.exit()   
+        sys.exit()
 
     # Set to user provided node
     if args.node != NODE:
@@ -108,12 +102,12 @@ def main():
 
 def url(url):
     regex = re.compile(
-        r'^(?:http|ftp)s?://' # http:// or https://
-        r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|' # domain...
-        r'localhost|' # localhost...
-        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|' # ...or ipv4
-        r'\[?[A-F0-9]*:[A-F0-9:]+\]?)' # ...or ipv6
-        r'(?::\d+)?' # optional port
+        r'^(?:http|ftp)s?://'  # http:// or https://
+        r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|'  # domain...
+        r'localhost|'  # localhost...
+        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|'  # ...or ipv4
+        r'\[?[A-F0-9]*:[A-F0-9:]+\]?)'  # ...or ipv6
+        r'(?::\d+)?'  # optional port
         r'(?:/?|[/?]\S+)$', re.IGNORECASE)
 
     if regex.match(url):
@@ -162,13 +156,13 @@ class IriTop:
         self.commands = ["{'command': 'getNeighbors'}",
                          "{'command': 'getNodeInfo'}"]
 
-    def run(self):         
+    def run(self):
 
-        _ = os.system('clear')
+        os.system('clear')
 
         with self.term.cbreak():
-	    val = ""
-	    tlast = 0
+            val = ""
+            tlast = 0
             # history_index = 0
             # history_index_max = 3
             self.hist = {}
@@ -201,7 +195,7 @@ class IriTop:
 
                     tlast = int(time.time())
 
-                    # Keep history of tx 
+                    # Keep history of tx
                     tx_history = {}
                     for neighbor in neighbors:
                         self.historizer('at',
@@ -234,9 +228,9 @@ class IriTop:
                                         tx_history,
                                         neighbor)
 
-		    self.hist = tx_history
+                    self.hist = tx_history
 
-                height, width = self.term.height, self.term.width
+                height, width = self.term.height, self.term.width  # height var not used?
 
                 print(self.term.move(0, 0) + self.term.black_on_cyan(
                       "IRITop - Simple IOTA IRI Node Monitor".ljust(width)))
@@ -245,10 +239,10 @@ class IriTop:
                 self.show(2, 0, "appVersion", node, "appVersion")
 
                 self.show_string(1, 1, "jreMemory", "Free: %s Mb  Max: %s Mb "
-                                 " Total: %s Mb" % 
+                                 " Total: %s Mb" %
                                  (node["jreFreeMemory"]//MB,
-                                 node["jreMaxMemory"]//MB,
-                                 node["jreTotalMemory"]//MB))
+                                  node["jreMaxMemory"]//MB,
+                                  node["jreTotalMemory"]//MB))
 
                 self.show_histogram(2, 1, "jreMemory",
                                     node["jreTotalMemory"] - node["jreFreeMemory"],
@@ -289,7 +283,7 @@ class IriTop:
 
     def show(self, row, col, label, dictionary, value):
 
-        height, width = self.term.height, self.term.width
+        height, width = self.term.height, self.term.width  # vars not used?
 
         x1 = (width // 3) * col
         x2 = x1 + 18
@@ -321,7 +315,7 @@ class IriTop:
 
     def show_string(self, row, col, label, value):
 
-        height, width = self.term.height, self.term.width
+        height, width = self.term.height, self.term.width  # vars not used?
 
         x1 = (width // 3) * col
         x2 = x1 + 18
@@ -333,13 +327,13 @@ class IriTop:
     def show_histogram(self, row, col, label, value, value_max,
                        warning_limit=0.8, span=1):
 
-        height, width = self.term.height, self.term.width
+        height, width = self.term.height, self.term.width  # vars not used?
 
         label_width = 18
         col_width = ((width // 3) - label_width) + ((span - 1) * (width // 3))
         x1 = (width // 3) * col
         x2 = x1 + label_width
-        b1 = x2 + 1
+        #b1 = x2 + 1 #  Not used?
         bw = col_width - 2
 
         vm = bw
@@ -371,7 +365,7 @@ class IriTop:
         height, width = self.term.height, self.term.width
         cw = width // 9
 
-        print(self.term.move(row, 0 * cw) + 
+        print(self.term.move(row, 0 * cw) +
               self.term.black_on_green("Neighbor Address".ljust(cw*3)))
         print(self.term.move(row, 3 * cw) +
               self.term.black_on_green("All tx".rjust(cw)))
