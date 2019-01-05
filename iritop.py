@@ -160,106 +160,105 @@ class IriTop:
 
         os.system('clear')
 
-        with self.term.fullscreen():
-	        with self.term.cbreak():
-	            val = ""
-	            tlast = 0
-	            self.hist = {}
+        with self.term.cbreak():
+            val = ""
+            tlast = 0
+            self.hist = {}
 
-	            while val.lower() != 'q':
-	                val = self.term.inkey(timeout=self.blink_delay)
+            while val.lower() != 'q':
+                val = self.term.inkey(timeout=self.blink_delay)
 
-	                if int(time.time()) - tlast > self.poll_delay:
+                if int(time.time()) - tlast > self.poll_delay:
 
-	                    results = \
-	                        ThreadPool(len(self.commands)).imap_unordered(
-	                                                       fetch_data,
-	                                                       self.commands)
+                    results = \
+                        ThreadPool(len(self.commands)).imap_unordered(
+                                                       fetch_data,
+                                                       self.commands)
 
-	                    neighbors = None
-	                    node = None
-	                    for data, e in results:
-	                        if e is not None:
-	                            sys.stderr.write("Error fetching data from node:"
-	                                             " %s\n" % e)
-	                            time.sleep(2)
-	                            sys.exit(1)
+                    neighbors = None
+                    node = None
+                    for data, e in results:
+                        if e is not None:
+                            sys.stderr.write("Error fetching data from node:"
+                                             " %s\n" % e)
+                            time.sleep(2)
+                            sys.exit(1)
 
-	                        if 'appName' in data.keys():
-	                            node = data
-	                        elif 'neighbors' in data.keys():
-	                            neighbors = data['neighbors']
+                        if 'appName' in data.keys():
+                            node = data
+                        elif 'neighbors' in data.keys():
+                            neighbors = data['neighbors']
 
-	                    tlast = int(time.time())
+                    tlast = int(time.time())
 
-	                    # Keep history of tx
-	                    tx_history = {}
-	                    for neighbor in neighbors:
-	                        self.historizer('at',
-	                                        'numberOfAllTransactions',
-	                                        tx_history,
-	                                        neighbor)
+                    # Keep history of tx
+                    tx_history = {}
+                    for neighbor in neighbors:
+                        self.historizer('at',
+                                        'numberOfAllTransactions',
+                                        tx_history,
+                                        neighbor)
 
-	                        self.historizer('nt',
-	                                        'numberOfNewTransactions',
-	                                        tx_history,
-	                                        neighbor)
+                        self.historizer('nt',
+                                        'numberOfNewTransactions',
+                                        tx_history,
+                                        neighbor)
 
-	                        self.historizer('st',
-	                                        'numberOfSentTransactions',
-	                                        tx_history,
-	                                        neighbor)
+                        self.historizer('st',
+                                        'numberOfSentTransactions',
+                                        tx_history,
+                                        neighbor)
 
-	                        self.historizer('rt',
-	                                        'numberOfRandomTransactionRequests',
-	                                        tx_history,
-	                                        neighbor)
+                        self.historizer('rt',
+                                        'numberOfRandomTransactionRequests',
+                                        tx_history,
+                                        neighbor)
 
-	                        self.historizer('xt',
-	                                        'numberOfStaleTransactions',
-	                                        tx_history,
-	                                        neighbor)
+                        self.historizer('xt',
+                                        'numberOfStaleTransactions',
+                                        tx_history,
+                                        neighbor)
 
-	                        self.historizer('it',
-	                                        'numberOfInvalidTransactions',
-	                                        tx_history,
-	                                        neighbor)
+                        self.historizer('it',
+                                        'numberOfInvalidTransactions',
+                                        tx_history,
+                                        neighbor)
 
-	                    self.hist = tx_history
+                    self.hist = tx_history
 
-	                height, width = self.term.height, self.term.width  # height var not used?
+                height, width = self.term.height, self.term.width  # height var not used?
 
-	                print(self.term.move(0, 0) + self.term.black_on_cyan(
-	                      "IRITop - Simple IOTA IRI Node Monitor".ljust(width)))
+                print(self.term.move(0, 0) + self.term.black_on_cyan(
+                      "IRITop - Simple IOTA IRI Node Monitor".ljust(width)))
 
-	                self.show(1, 0, "appName", node, "appName")
-	                self.show(2, 0, "appVersion", node, "appVersion")
+                self.show(1, 0, "appName", node, "appName")
+                self.show(2, 0, "appVersion", node, "appVersion")
 
-	                self.show_string(1, 1, "jreMemory", "Free: %s Mb  Max: %s Mb "
-	                                 " Total: %s Mb" %
-	                                 (node["jreFreeMemory"]//MB,
-	                                  node["jreMaxMemory"]//MB,
-	                                  node["jreTotalMemory"]//MB))
+                self.show_string(1, 1, "jreMemory", "Free: %s Mb  Max: %s Mb "
+                                 " Total: %s Mb" %
+                                 (node["jreFreeMemory"]//MB,
+                                  node["jreMaxMemory"]//MB,
+                                  node["jreTotalMemory"]//MB))
 
-	                self.show_histogram(2, 1, "jreMemory",
-	                                    node["jreTotalMemory"] - node["jreFreeMemory"],
-	                                    node["jreMaxMemory"],
-	                                    0.8,
-	                                    span=2)
+                self.show_histogram(2, 1, "jreMemory",
+                                    node["jreTotalMemory"] - node["jreFreeMemory"],
+                                    node["jreMaxMemory"],
+                                    0.8,
+                                    span=2)
 
-	                self.show(3, 0, "milestoneStart", node, "milestoneStartIndex")
-	                self.show(3, 1, "milestoneIndex", node, "latestMilestoneIndex")
-	                self.show(3, 2, "milestoneSolid", node,
-	                          "latestSolidSubtangleMilestoneIndex")
+                self.show(3, 0, "milestoneStart", node, "milestoneStartIndex")
+                self.show(3, 1, "milestoneIndex", node, "latestMilestoneIndex")
+                self.show(3, 2, "milestoneSolid", node,
+                          "latestSolidSubtangleMilestoneIndex")
 
-	                self.show(4, 0, "jreVersion", node, "jreVersion")
-	                self.show(4, 1, "tips", node, "tips")
-	                self.show(4, 2, "txToRequest", node, "transactionsToRequest")
+                self.show(4, 0, "jreVersion", node, "jreVersion")
+                self.show(4, 1, "tips", node, "tips")
+                self.show(4, 2, "txToRequest", node, "transactionsToRequest")
 
-	                self.show_string(5, 0, "Node Address", NODE)
-	                self.show(5, 2, "neighbors", node, "neighbors")
+                self.show_string(5, 0, "Node Address", NODE)
+                self.show(5, 2, "neighbors", node, "neighbors")
 
-	                self.show_neighbors(7, neighbors)
+                self.show_neighbors(7, neighbors)
 
     def historizer(self, txtype, wsid, hd, n):
         nid = "%s-%s" % (n['address'], txtype)
