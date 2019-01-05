@@ -11,7 +11,7 @@ import socket
 from multiprocessing.pool import ThreadPool
 
 
-__VERSION__ = '0.2'
+__VERSION__ = '0.2.1'
 
 """
 Simple Iota IRI Node Monitor
@@ -21,6 +21,9 @@ Typically this is run on the IRI node itself, however,
 as soon as the node is allowed to externally expose
 getNodeInfo and getNeighbors information, then this tool
 can be run from a remote shell as well.
+
+More information:
+https://github.com/maeck70/iritop
 """
 
 
@@ -353,8 +356,8 @@ class IriTop:
               + self.term.white("[")
               + self.term.bright_green("|" * mG)
               + self.term.bright_yellow("|" * mY)
-              + self.term.bright_red("|" * mR)
-              + self.term.bright_black("|" * mB)
+              + self.term.bright_red("+" * mR)
+              + self.term.bright_black("-" * mB)
               + self.term.white("]"))
 
     def show_neighbors(self, row, neighbors):
@@ -385,74 +388,73 @@ class IriTop:
               self.term.black_on_cyan("Press q to exit".ljust(width)))        
 
     def show_neighbor(self, row, neighbor, column_width, height):
+        
+        addr = neighbor['connectionType'] + "://" + neighbor['address']
+        at = "%d (%d)" % (neighbor['numberOfAllTransactions'],
+                          neighbor['numberOfAllTransactionsDelta'])
+        at = at.rjust(column_width)
 
-        if row < height:
+        it = "%d (%d)" % (neighbor['numberOfInvalidTransactions'],
+                          neighbor['numberOfInvalidTransactionsDelta'])
+        it = it.rjust(column_width)
 
-            addr = neighbor['connectionType'] + "://" + neighbor['address']
-            at = "%d (%d)" % (neighbor['numberOfAllTransactions'],
-                              neighbor['numberOfAllTransactionsDelta'])
-            at = at.rjust(column_width)
+        nt = "%d (%d)" % (neighbor['numberOfNewTransactions'],
+                          neighbor['numberOfNewTransactionsDelta'])
+        nt = nt.rjust(column_width)
 
-            it = "%d (%d)" % (neighbor['numberOfInvalidTransactions'],
-                              neighbor['numberOfInvalidTransactionsDelta'])
-            it = it.rjust(column_width)
+        rt = "%d (%d)" % (neighbor['numberOfRandomTransactionRequests'],
+                          neighbor['numberOfRandomTransactionRequestsDelta'])
+        rt = rt.rjust(column_width)
 
-            nt = "%d (%d)" % (neighbor['numberOfNewTransactions'],
-                              neighbor['numberOfNewTransactionsDelta'])
-            nt = nt.rjust(column_width)
+        st = "%d (%d)" % (neighbor['numberOfSentTransactions'],
+                          neighbor['numberOfSentTransactionsDelta'])
+        st = st.rjust(column_width)
 
-            rt = "%d (%d)" % (neighbor['numberOfRandomTransactionRequests'],
-                              neighbor['numberOfRandomTransactionRequestsDelta'])
-            rt = rt.rjust(column_width)
+        xt = "%d (%d)" % (neighbor['numberOfStaleTransactions'],
+                          neighbor['numberOfStaleTransactionsDelta'])
+        xt = xt.rjust(column_width)
 
-            st = "%d (%d)" % (neighbor['numberOfSentTransactions'],
-                              neighbor['numberOfSentTransactionsDelta'])
-            st = st.rjust(column_width)
+        if (neighbor['numberOfAllTransactionsDelta'] == 0):
+            addr = self.term.bright_red(addr)
 
-            xt = "%d (%d)" % (neighbor['numberOfStaleTransactions'],
-                              neighbor['numberOfStaleTransactionsDelta'])
-            xt = xt.rjust(column_width)
+        value_at = "neighbor-%s-at" % neighbor['address']
+        if (value_at in self.prev and
+          neighbor['numberOfAllTransactions'] != self.prev[value_at]):
+            at = self.term.cyan(at)
 
-            if (neighbor['numberOfAllTransactionsDelta'] == 0):
-                addr = self.term.bright_red(addr)
+        if neighbor['numberOfInvalidTransactions'] > 0:
+            it = \
+                self.term.red(str(neighbor['numberOfInvalidTransactions'])
+                         .rjust(column_width))
 
-            value_at = "neighbor-%s-at" % neighbor['address']
-            if (value_at in self.prev and
-              neighbor['numberOfAllTransactions'] != self.prev[value_at]):
-                at = self.term.cyan(at)
+        value_it = "neighbor-%s-it" % neighbor['address']
+        if (value_it in self.prev and
+          neighbor['numberOfInvalidTransactions'] != self.prev[value_it]):
+            it = self.term.cyan(it)
 
-            if neighbor['numberOfInvalidTransactions'] > 0:
-                it = \
-                    self.term.red(str(neighbor['numberOfInvalidTransactions'])
-                             .rjust(column_width))
+        value_nt = "neighbor-%s-nt" % neighbor['address']
+        if (value_nt in self.prev and
+          neighbor['numberOfNewTransactions'] != self.prev[value_nt]):
+            nt = self.term.cyan(nt)
 
-            value_it = "neighbor-%s-it" % neighbor['address']
-            if (value_it in self.prev and
-              neighbor['numberOfInvalidTransactions'] != self.prev[value_it]):
-                it = self.term.cyan(it)
+        value_rt = "neighbor-%s-rt" % neighbor['address']
+        if (value_rt in self.prev and
+          neighbor['numberOfRandomTransactionRequests'] != self.prev[value_rt]):
+            rt = self.term.cyan(rt)
 
-            value_nt = "neighbor-%s-nt" % neighbor['address']
-            if (value_nt in self.prev and
-              neighbor['numberOfNewTransactions'] != self.prev[value_nt]):
-                nt = self.term.cyan(nt)
+        value_st = "neighbor-%s-st" % neighbor['address']
+        if (value_st in self.prev and
+          neighbor['numberOfSentTransactions'] != self.prev[value_st]):
+            st = self.term.cyan(st)
 
-            value_rt = "neighbor-%s-rt" % neighbor['address']
-            if (value_rt in self.prev and
-              neighbor['numberOfRandomTransactionRequests'] != self.prev[value_rt]):
-                rt = self.term.cyan(rt)
-
-            value_st = "neighbor-%s-st" % neighbor['address']
-            if (value_st in self.prev and
-              neighbor['numberOfSentTransactions'] != self.prev[value_st]):
-                st = self.term.cyan(st)
-
-            if neighbor['numberOfStaleTransactions'] > 0:
-                xt = self.term.yellow(xt)
-            value_xt = "neighbor-%s-xt" % neighbor['address']
-            if (value_xt in self.prev and
-              neighbor['numberOfStaleTransactions'] != self.prev[value_xt]):
-                xt = self.term.cyan(xt)
-
+        if neighbor['numberOfStaleTransactions'] > 0:
+            xt = self.term.yellow(xt)
+        value_xt = "neighbor-%s-xt" % neighbor['address']
+        if (value_xt in self.prev and
+          neighbor['numberOfStaleTransactions'] != self.prev[value_xt]):
+            xt = self.term.cyan(xt)
+		
+        if row < height-2:
             print(self.term.move(row, 0 * column_width) + self.term.white(addr))
             print(self.term.move(row, 3 * column_width) + self.term.green(at))
             print(self.term.move(row, 4 * column_width) + self.term.green(nt))
@@ -461,12 +463,12 @@ class IriTop:
             print(self.term.move(row, 7 * column_width) + self.term.green(it))
             print(self.term.move(row, 8 * column_width) + self.term.green(xt))
 
-            self.prev[value_at] = neighbor['numberOfAllTransactions']
-            self.prev[value_it] = neighbor['numberOfInvalidTransactions']
-            self.prev[value_nt] = neighbor['numberOfNewTransactions']
-            self.prev[value_rt] = neighbor['numberOfRandomTransactionRequests']
-            self.prev[value_st] = neighbor['numberOfSentTransactions']
-            self.prev[value_xt] = neighbor['numberOfStaleTransactions']
+        self.prev[value_at] = neighbor['numberOfAllTransactions']
+        self.prev[value_it] = neighbor['numberOfInvalidTransactions']
+        self.prev[value_nt] = neighbor['numberOfNewTransactions']
+        self.prev[value_rt] = neighbor['numberOfRandomTransactionRequests']
+        self.prev[value_st] = neighbor['numberOfSentTransactions']
+        self.prev[value_xt] = neighbor['numberOfStaleTransactions']
 
 
 if __name__ == '__main__':
