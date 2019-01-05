@@ -11,7 +11,7 @@ import socket
 from multiprocessing.pool import ThreadPool
 
 
-__VERSION__ = '0.1'
+__VERSION__ = '0.2'
 
 """
 Simple Iota IRI Node Monitor
@@ -40,7 +40,7 @@ except ImportError:
 
 
 # Url request timeout
-URL_TIMEOUT = 2
+URL_TIMEOUT = 5
 
 # Default node URL
 NODE = "http://localhost:14265"
@@ -380,6 +380,9 @@ class IriTop:
         print(self.term.move(row, 8 * cw) +
               self.term.black_on_green("Stale tx".rjust(cw)))
 
+        print(self.term.move(height - 2, 0 * cw) +
+              self.term.black_on_cyan("Press q to exit".ljust(width)))        
+
         row += 1
         for neighbor in neighbors:
             self.show_neighbor(row, neighbor, cw, height)
@@ -414,8 +417,7 @@ class IriTop:
                               neighbor['numberOfStaleTransactionsDelta'])
             xt = xt.rjust(column_width)
 
-            if (neighbor['numberOfAllTransactionsDelta'] == 0 and
-              neighbor['numberOfAllTransactions'] > 0):
+            if (neighbor['numberOfAllTransactionsDelta'] == 0):
                 addr = self.term.bright_red(addr)
 
             value_at = "neighbor-%s-at" % neighbor['address']
