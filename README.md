@@ -13,8 +13,9 @@ Usage:
 - Start without a --node argument will assume 'http://localhost:14265' as the node address for the web service calls.
 - Provide an address using --node http://myirinode:14265 if you want to specify a specific address.
 
-Use 'q' enter to exit from the tool.
+Use 'q' to exit from the tool.
 
 Prerequisites:
-- Python3
+- Python 2 or 3
+- Urllib2 (pip install urllib2)
 - Blessed (pip install blessed)
