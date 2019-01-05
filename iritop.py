@@ -163,11 +163,7 @@ class IriTop:
         with self.term.cbreak():
             val = ""
             tlast = 0
-            # history_index = 0
-            # history_index_max = 3
             self.hist = {}
-            # for a in range(history_index_max):
-            #    hist.append({})
 
             while val.lower() != 'q':
                 val = self.term.inkey(timeout=self.blink_delay)
@@ -380,13 +376,13 @@ class IriTop:
         print(self.term.move(row, 8 * cw) +
               self.term.black_on_green("Stale tx".rjust(cw)))
 
-        print(self.term.move(height - 2, 0 * cw) +
-              self.term.black_on_cyan("Press q to exit".ljust(width)))        
-
         row += 1
         for neighbor in neighbors:
             self.show_neighbor(row, neighbor, cw, height)
             row += 1
+
+        print(self.term.move(height - 2, 0 * cw) +
+              self.term.black_on_cyan("Press q to exit".ljust(width)))        
 
     def show_neighbor(self, row, neighbor, column_width, height):
 
