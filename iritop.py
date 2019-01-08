@@ -454,6 +454,7 @@ class IriTop:
           neighbor['numberOfStaleTransactions'] != self.prev[value_xt]):
             xt = self.term.cyan(xt)
 		
+				# do not display any neighbors crossing the height of the terminal 
         if row < height-2:
             print(self.term.move(row, 0 * column_width) + self.term.white(addr))
             print(self.term.move(row, 3 * column_width) + self.term.green(at))
