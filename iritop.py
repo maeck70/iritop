@@ -417,7 +417,7 @@ class IriTop:
                           neighbor['numberOfStaleTransactionsDelta'])
         xt = xt.rjust(column_width)
 
-        if (neighbor['numberOfAllTransactionsDelta'] == 0 and ITER > 10):
+        if (neighbor['numberOfAllTransactionsDelta'] == 0 and ITER > 12):
             addr = self.term.bright_red(addr)
 
         value_at = "neighbor-%s-at" % neighbor['address']
