@@ -99,7 +99,6 @@ def main():
     if args.node != NODE:
         NODE = args.node
 
-    print("IRITop connecting to node %s..." % args.node)
     iri_top = IriTop(args)
     wrapper(iri_top.run)
 
@@ -163,6 +162,8 @@ class IriTop:
     def run(self, stdscr):
 
         stdscr.clear()
+
+        print("IRITop connecting to node %s..." % NODE)
 
         with self.term.cbreak():
             val = ""
@@ -361,27 +362,32 @@ class IriTop:
 
     def show_neighbors(self, row, neighbors):
         global ITER
+        cols = 9
         height, width = self.term.height, self.term.width
-        cw = width // 9
+        cw = width // cols
+        cw1 = width - ((cols - 1) * cw)
+        cwl = [0,]
+        for c in range(cols - 1):
+            cwl.append(cw1 + (c * cw))
 
-        print(self.term.move(row, 0 * cw) +
-              self.term.black_on_green("Neighbor Address".ljust(cw*3)))
-        print(self.term.move(row, 3 * cw) +
+        print(self.term.move(row, cwl[0]) +
+              self.term.black_on_green("Neighbor Address".ljust(cw*4)))
+        print(self.term.move(row, cwl[3]) +
               self.term.black_on_green("All tx".rjust(cw)))
-        print(self.term.move(row, 4 * cw) +
+        print(self.term.move(row, cwl[4]) +
               self.term.black_on_green("New tx".rjust(cw)))
-        print(self.term.move(row, 5 * cw) +
+        print(self.term.move(row, cwl[5]) +
               self.term.black_on_green("Sent tx".rjust(cw)))
-        print(self.term.move(row, 6 * cw) +
+        print(self.term.move(row, cwl[6]) +
               self.term.black_on_green("Random tx".rjust(cw)))
-        print(self.term.move(row, 7 * cw) +
+        print(self.term.move(row, cwl[7]) +
               self.term.black_on_green("Invalid tx".rjust(cw)))
-        print(self.term.move(row, 8 * cw) +
+        print(self.term.move(row, cwl[8]) +
               self.term.black_on_green("Stale tx".rjust(cw)))
 
         row += 1
         for neighbor in neighbors:
-            self.show_neighbor(row, neighbor, cw, height)
+            self.show_neighbor(row, neighbor, cwl, cw, height)
             row += 1
 
         print(self.term.move(height - 2, 0 * cw) +
@@ -389,7 +395,7 @@ class IriTop:
 
         ITER += 1
     
-    def show_neighbor(self, row, neighbor, column_width, height):
+    def show_neighbor(self, row, neighbor, column_start_list, column_width, height):
         global ITER
         
         addr = neighbor['connectionType'] + "://" + neighbor['address']
@@ -459,13 +465,13 @@ class IriTop:
 		
 				# do not display any neighbors crossing the height of the terminal 
         if row < height-2:
-            print(self.term.move(row, 0 * column_width) + self.term.white(addr))
-            print(self.term.move(row, 3 * column_width) + self.term.green(at))
-            print(self.term.move(row, 4 * column_width) + self.term.green(nt))
-            print(self.term.move(row, 5 * column_width) + self.term.green(st))
-            print(self.term.move(row, 6 * column_width) + self.term.green(rt))
-            print(self.term.move(row, 7 * column_width) + self.term.green(it))
-            print(self.term.move(row, 8 * column_width) + self.term.green(xt))
+            print(self.term.move(row, column_start_list[0]) + self.term.white(addr))
+            print(self.term.move(row, column_start_list[3]) + self.term.green(at))
+            print(self.term.move(row, column_start_list[4]) + self.term.green(nt))
+            print(self.term.move(row, column_start_list[5]) + self.term.green(st))
+            print(self.term.move(row, column_start_list[6]) + self.term.green(rt))
+            print(self.term.move(row, column_start_list[7]) + self.term.green(it))
+            print(self.term.move(row, column_start_list[8]) + self.term.green(xt))
 
         self.prev[value_at] = neighbor['numberOfAllTransactions']
         self.prev[value_it] = neighbor['numberOfInvalidTransactions']
