@@ -52,6 +52,7 @@ HEADERS = {'Content-Type': 'application/json',
            'Accept-Charset': 'UTF-8',
            'X-IOTA-API-Version': '1'}
 
+ITER = 0
 MB = 1024 * 1024
 
 
@@ -359,6 +360,7 @@ class IriTop:
               + self.term.white("]"))
 
     def show_neighbors(self, row, neighbors):
+        global ITER
         height, width = self.term.height, self.term.width
         cw = width // 9
 
@@ -383,9 +385,12 @@ class IriTop:
             row += 1
 
         print(self.term.move(height - 2, 0 * cw) +
-              self.term.black_on_cyan("Press q to exit".ljust(width)))        
+              self.term.black_on_cyan("Press q to exit".ljust(width)))    
 
+        ITER += 1
+    
     def show_neighbor(self, row, neighbor, column_width, height):
+        global ITER
         
         addr = neighbor['connectionType'] + "://" + neighbor['address']
         at = "%d (%d)" % (neighbor['numberOfAllTransactions'],
@@ -412,7 +417,7 @@ class IriTop:
                           neighbor['numberOfStaleTransactionsDelta'])
         xt = xt.rjust(column_width)
 
-        if (neighbor['numberOfAllTransactionsDelta'] == 0):
+        if (neighbor['numberOfAllTransactionsDelta'] == 0 and ITER > 10):
             addr = self.term.bright_red(addr)
 
         value_at = "neighbor-%s-at" % neighbor['address']
@@ -468,7 +473,6 @@ class IriTop:
         self.prev[value_rt] = neighbor['numberOfRandomTransactionRequests']
         self.prev[value_st] = neighbor['numberOfSentTransactions']
         self.prev[value_xt] = neighbor['numberOfStaleTransactions']
-
 
 if __name__ == '__main__':
     main()
