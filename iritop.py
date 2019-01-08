@@ -3,15 +3,14 @@
 from __future__ import division
 import argparse
 import re
-import os
 import sys
 import time
 import json
 import socket
-from multiprocessing.pool import ThreadPool
+from curses import wrapper
 
 
-__VERSION__ = '0.2.1'
+__VERSION__ = '0.2.2'
 
 """
 Simple Iota IRI Node Monitor
@@ -80,6 +79,7 @@ def parse_args():
     return parser.parse_args()
 
 
+#def main(stdscr):
 def main():
     global NODE
 
@@ -100,7 +100,7 @@ def main():
 
     print("IRITop connecting to node %s..." % args.node)
     iri_top = IriTop(args)
-    iri_top.run()
+    wrapper(iri_top.run)
 
 
 def url(url):
@@ -159,9 +159,9 @@ class IriTop:
         self.commands = ["{'command': 'getNeighbors'}",
                          "{'command': 'getNodeInfo'}"]
 
-    def run(self):
+    def run(self, stdscr):
 
-        os.system('clear')
+        stdscr.clear()
 
         with self.term.cbreak():
             val = ""
@@ -173,10 +173,8 @@ class IriTop:
 
                 if int(time.time()) - tlast > self.poll_delay:
 
-                    results = \
-                        ThreadPool(len(self.commands)).imap_unordered(
-                                                       fetch_data,
-                                                       self.commands)
+                    results = [fetch_data(self.commands[i]) for i
+                               in range(len(self.commands))]
 
                     neighbors = None
                     node = None
