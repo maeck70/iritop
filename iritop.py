@@ -6,13 +6,15 @@ import re
 import sys
 import time
 import json
+import yaml
 import socket
+from os import path
 from curses import wrapper
 
 
-__VERSION__ = '0.2.2'
+__VERSION__ = '0.2.3'
 
-"""
+"""\
 Simple Iota IRI Node Monitor
 
 This is a simple monitor that runs from the command line.
@@ -52,52 +54,79 @@ HEADERS = {'Content-Type': 'application/json',
            'Accept-Charset': 'UTF-8',
            'X-IOTA-API-Version': '1'}
 
+BLINK_DELAY = 0.5
+POLL_DELAY = 2
 ITER = 0
 MB = 1024 * 1024
 
 
 def parse_args():
     global NODE
+    global BLINK_DELAY
+    global POLL_DELAY
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description='IRI Top status viewer',
+        version=__VERSION__,
+        epilog='Configuration can also be set in yaml formatted file.'
+               ' For the configuration keys omit prefix hyphen - or --, and'
+               ' replace all other instances of - with _')
 
-    parser.add_argument("-V", "--version", help="show program version",
-                        action="store_true")
+    parser.add_argument('-c', '--config', type=read_config,
+                        help="configuration file. Defaults to ~/.iritop",
+                        action=LoadFromFile)
 
     parser.add_argument("-n", "--node", type=url,
-                        help="set the node we are connecting with. Default: "
-                             "%(default)s",
-                        default=NODE)
+                        help="set the node we are connecting with. Default: " +
+                              NODE)
 
     parser.add_argument("-p", "--poll-delay", type=int,
-                        help="node poll delay. Default: %(default)s",
-                        default=2)
+                        help="node poll delay. Default: %ss" % POLL_DELAY)
 
     parser.add_argument("-b", "--blink-delay", type=float,
-                        help="blink delay. Default: %(default)s",
-                        default=0.5)
+                        help="blink delay. Default: %ss" % BLINK_DELAY)
 
-    return parser.parse_args()
+    # Get configuration file if exists
+    home_dir = path.expanduser("~")
+    if path.isfile(home_dir + '/.iritop'):
+        sys.argv.extend(['-c', home_dir + '/.iritop'])
+
+    args = parser.parse_args()
+
+    # Defaults not set by ArgumentParser so that they can
+    # be overriden from command line (overrides file)
+    if args.blink_delay is None:
+        args.blink_delay = BLINK_DELAY
+    if args.poll_delay is None:
+        args.poll_delay = POLL_DELAY
+    if args.node is not None:
+        NODE = args.node
+
+    return args
 
 
-#def main(stdscr):
+class LoadFromFile(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        for k, v in values.items():
+            # Disallow pointing to another config
+            if str(k) == 'c' or str(k) == 'config':
+                continue
+
+            # Don't override cli args
+            if getattr(namespace, k) is not None:
+                continue
+
+            # Parse key values as arguments
+            k = '--' + k.replace('_', '-')
+            parser.parse_args((k, str(v)), namespace=namespace)
+
+
 def main():
-    global NODE
-
     try:
         args = parse_args()
     except Exception as e:
         sys.stderr.write("Error parsing arguments: %s\n" % e)
         sys.exit(1)
-
-    # check for --version or -V
-    if args.version:
-        print("this is IRITop version %s" % __VERSION__)
-        sys.exit()
-
-    # Set to user provided node
-    if args.node != NODE:
-        NODE = args.node
 
     iri_top = IriTop(args)
     wrapper(iri_top.run)
@@ -117,6 +146,11 @@ def url(url):
         return url
     else:
         raise argparse.ArgumentTypeError("Invalid node URL")
+
+
+def read_config(config_file):
+    with open(config_file) as fh:
+        return yaml.load(fh)
 
 
 def fetch_data(data):
@@ -462,9 +496,9 @@ class IriTop:
         if (value_xt in self.prev and
           neighbor['numberOfStaleTransactions'] != self.prev[value_xt]):
             xt = self.term.cyan(xt)
-		
-				# do not display any neighbors crossing the height of the terminal 
-        if row < height-2:
+
+        # do not display any neighbors crossing the height of the terminal
+        if row < height - 2:
             print(self.term.move(row, column_start_list[0]) + self.term.white(addr))
             print(self.term.move(row, column_start_list[3]) + self.term.green(at))
             print(self.term.move(row, column_start_list[4]) + self.term.green(nt))
