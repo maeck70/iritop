@@ -12,7 +12,7 @@ from os import path
 from curses import wrapper
 
 
-__VERSION__ = '0.2.3'
+__VERSION__ = '0.2.4'
 
 """\
 Simple Iota IRI Node Monitor
@@ -328,15 +328,15 @@ class IriTop:
             vs = self.term.bright_red(str(dictionary[value]))
 
         # Highlight if latest milestone is out of sync with the solid milestone
-        if value == "latestMilestoneIndex":
+        if value == "latestSolidSubtangleMilestoneIndex":
             diff = dictionary["latestSolidSubtangleMilestoneIndex"] - \
               dictionary["latestMilestoneIndex"]
 
             if diff != 0:
                 if diff <= 2:
-                    vs = self.term.bright_yellow(str(dictionary[value]))
+                    vs = self.term.bright_yellow(str(dictionary[value]) + "*")
                 else:
-                    vs = self.term.bright_red(str(dictionary[value]))
+                    vs = self.term.bright_yellow_on_red(str(dictionary[value]) + " (!)")
 
         if value in self.prev and dictionary[value] != self.prev[value]:
             vs = self.term.on_blue(vs)
@@ -458,7 +458,7 @@ class IriTop:
         xt = xt.rjust(column_width)
 
         if (neighbor['numberOfAllTransactionsDelta'] == 0 and ITER > 12):
-            addr = self.term.bright_red(addr)
+            addr = self.term.bright_red("(!) " + addr)
 
         value_at = "neighbor-%s-at" % neighbor['address']
         if (value_at in self.prev and
