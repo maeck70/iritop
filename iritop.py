@@ -10,7 +10,6 @@ import yaml
 import random
 from os import path
 from curses import wrapper
-from scramble import scrambleAddress
 
 
 __VERSION__ = '0.3.3'
@@ -134,6 +133,36 @@ class LoadFromFile(argparse.Action):
             # Parse key values as arguments
             k = '--' + k.replace('_', '-')
             parser.parse_args((k, str(v)), namespace=namespace)
+
+
+def scrambleCharacter(c):
+    a1 = 65
+    a2 = 90
+    b1 = 97
+    b2 = 122
+    c1 = 48
+    c2 = 57
+
+    ci = ord(c)
+
+    if a1 <= ci <= a2:
+        c = chr(random.randint(a1, a2))
+    elif b1 <= ci <= b2:
+        c = chr(random.randint(b1, b2))
+    elif c1 <= ci <= c2:
+        c = chr(random.randint(c1, c2))
+
+    return c
+
+
+def scrambleAddress(addr):
+    p1 = addr.find(":")
+
+    addrOut = addr[:p1]
+    for c in addr[p1:]:
+        addrOut += scrambleCharacter(c)
+
+    return addrOut
 
 
 def main():
@@ -340,7 +369,9 @@ class IriTop:
 
                 neighborCount = "%s" % node['neighbors']
                 if self.incommunicados > 0:
-                    neighborCount += self.term.bright_red(" / %d" % self.incommunicados)
+                    neighborCount += self.term.bright_red(" / %d " % self.incommunicados)
+                else:
+                    neighborCount += "    "
                 self.show_string(5, 2, "neighbors", neighborCount)
 
                 self.show_string(6, 0, "Baseline",
