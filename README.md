@@ -38,6 +38,8 @@ pip install -r requirements.txt
                         node poll delay. Default: 2s
   -b BLINK_DELAY, --blink-delay BLINK_DELAY
                         blink delay. Default: 0.5s
+  -t URL_TIMEOUT, --url-timeout URL_TIMEOUT
+                        URL Timeout. Default: 5s
 ```
 
 ## Configuration File
