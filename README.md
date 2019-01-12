@@ -16,7 +16,6 @@ Where possible, the tool will highlight where the statistics are outside the nor
 - Provide an address using --node http://myirinode:14265 if you want to specify a specific address.
 
 ##Arguments:
-``
 >  -h, --help            show this help message and exit
 >  -v, --version         show program's version number and exit
 >  -c CONFIG, --config CONFIG
@@ -27,7 +26,6 @@ Where possible, the tool will highlight where the statistics are outside the nor
 >                        node poll delay. Default: 2s
 >  -b BLINK_DELAY, --blink-delay BLINK_DELAY
 >                        blink delay. Default: 0.5s
-``
 
 The configuration can also be set in yaml formatted file. By default the configuration file from ~/.iritop is read. All configuration parameters can be provided in the config file. 
 
