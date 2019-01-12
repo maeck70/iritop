@@ -7,12 +7,11 @@ import sys
 import time
 import json
 import yaml
-import socket
 from os import path
 from curses import wrapper
 
 
-__VERSION__ = '0.2.5'
+__VERSION__ = '0.3.0'
 
 """\
 Simple Iota IRI Node Monitor
@@ -31,7 +30,8 @@ https://github.com/maeck70/iritop
 try:
     import urllib3
 except ImportError:
-    sys.stderr.write("Missing python urllib3? Install via 'pip install urllib3'"
+    sys.stderr.write("Missing python urllib3? " +
+                     "Install via 'pip install urllib3'"
                      "\n")
     sys.exit(1)
 
@@ -64,6 +64,7 @@ def parse_args():
     global NODE
     global BLINK_DELAY
     global POLL_DELAY
+    global URL_TIMEOUT
 
     parser = argparse.ArgumentParser(
         description='IRI Top status viewer',
@@ -87,6 +88,9 @@ def parse_args():
 
     parser.add_argument("-b", "--blink-delay", type=float,
                         help="blink delay. Default: %ss" % BLINK_DELAY)
+
+    parser.add_argument("-t", "--url-timeout", type=int,
+                        help="URL Timeout. Default: %ss" % URL_TIMEOUT)
 
     # Get configuration file if exists
     home_dir = path.expanduser("~")
@@ -192,6 +196,26 @@ class IriTop:
         self.blink_delay = args.blink_delay
         self.commands = [{'command': 'getNeighbors'},
                          {'command': 'getNodeInfo'}]
+        self.txkeys = [{'keyshort': 'at',
+                        'key': 'numberOfAllTransactions', 'col': 3},
+                       {'keyshort': 'st',
+                        'key': 'numberOfSentTransactions', 'col': 5},
+                       {'keyshort': 'nt',
+                        'key': 'numberOfNewTransactions', 'col': 4},
+                       {'keyshort': 'rt',
+                        'key': 'numberOfRandomTransactionRequests', 'col': 6},
+                       {'keyshort': 'xt',
+                        'key': 'numberOfStaleTransactions', 'col': 8},
+                       {'keyshort': 'it',
+                        'key': 'numberOfInvalidTransactions', 'col': 7}, ]
+        self.baseline = dict()
+        self.baselineStr = ['Off', 'On']
+        self.baselineToggle = 0
+        self.width = 0
+        self.height = 0
+        self.oldheight = 0
+        self.oldwidth = 0 
+
 
     def run(self, stdscr):
 
@@ -206,6 +230,9 @@ class IriTop:
 
             while val.lower() != 'q':
                 val = self.term.inkey(timeout=self.blink_delay)
+
+                self.oldheight, self.oldwidth = self.height, self.width
+                self.height, self.width = self.term.height, self.term.width
 
                 if int(time.time()) - tlast > self.poll_delay:
 
@@ -231,42 +258,34 @@ class IriTop:
                     # Keep history of tx
                     tx_history = {}
                     for neighbor in neighbors:
-                        self.historizer('at',
-                                        'numberOfAllTransactions',
-                                        tx_history,
-                                        neighbor)
-
-                        self.historizer('nt',
-                                        'numberOfNewTransactions',
-                                        tx_history,
-                                        neighbor)
-
-                        self.historizer('st',
-                                        'numberOfSentTransactions',
-                                        tx_history,
-                                        neighbor)
-
-                        self.historizer('rt',
-                                        'numberOfRandomTransactionRequests',
-                                        tx_history,
-                                        neighbor)
-
-                        self.historizer('xt',
-                                        'numberOfStaleTransactions',
-                                        tx_history,
-                                        neighbor)
-
-                        self.historizer('it',
-                                        'numberOfInvalidTransactions',
-                                        tx_history,
-                                        neighbor)
+                        for txkey in self.txkeys:
+                            self.historizer(txkey['keyshort'],
+                                            txkey['key'],
+                                            tx_history,
+                                            neighbor)
 
                     self.hist = tx_history
 
-                height, width = self.term.height, self.term.width  # height var not used?
+                if val.lower() == 'b':
+                    for neighbor in neighbors:
+                        for txkey in self.txkeys:
+                            self.baseline[self.getBaselineKey(neighbor,
+                                          txkey['keyshort'])] = \
+                                          neighbor[txkey['key']]
+                    self.baselineToggle = self.baselineToggle ^ 1
+
+                if (self.oldheight != self.height) or (self.oldwidth != self.width):
+                    print(self.term.clear)
 
                 print(self.term.move(0, 0) + self.term.black_on_cyan(
-                      "IRITop - Simple IOTA IRI Node Monitor".ljust(width)))
+                      "IRITop - Simple IOTA IRI Node Monitor"
+                      .ljust(self.width)))
+
+                for neighbor in neighbors:
+                    for txkey in self.txkeys:
+                        key = self.getBaselineKey(neighbor, txkey['keyshort'])
+                        if key not in self.baseline:
+                            self.baseline[key] = 0
 
                 self.show(1, 0, "appName", node, "appName")
                 self.show(2, 0, "appVersion", node, "appVersion")
@@ -278,7 +297,8 @@ class IriTop:
                                   node["jreTotalMemory"]//MB))
 
                 self.show_histogram(2, 1, "jreMemory",
-                                    node["jreTotalMemory"] - node["jreFreeMemory"],
+                                    node["jreTotalMemory"] -
+                                    node["jreFreeMemory"],
                                     node["jreMaxMemory"],
                                     0.8,
                                     span=2)
@@ -295,7 +315,13 @@ class IriTop:
                 self.show_string(5, 0, "Node Address", NODE)
                 self.show(5, 2, "neighbors", node, "neighbors")
 
+                self.show_string(6, 0, "Baseline",
+                                 self.baselineStr[self.baselineToggle])
+
                 self.show_neighbors(7, neighbors)
+
+    def getBaselineKey(self, neighbor, subkey):
+        return "%s:%s" % (neighbor['address'], subkey)
 
     def historizer(self, txtype, wsid, hd, n):
         nid = "%s-%s" % (n['address'], txtype)
@@ -316,9 +342,7 @@ class IriTop:
 
     def show(self, row, col, label, dictionary, value):
 
-        height, width = self.term.height, self.term.width  # vars not used?
-
-        x1 = (width // 3) * col
+        x1 = (self.width // 3) * col
         x2 = x1 + 18
 
         vs = self.term.bright_cyan(str(dictionary[value]))
@@ -336,7 +360,8 @@ class IriTop:
                 if diff <= 2:
                     vs = self.term.bright_yellow(str(dictionary[value]) + "*")
                 else:
-                    vs = self.term.bright_yellow_on_red(str(dictionary[value]) + " (!)")
+                    vs = self.term.bright_yellow_on_red(
+                            str(dictionary[value]) + " (!)")
 
         if value in self.prev and dictionary[value] != self.prev[value]:
             vs = self.term.on_blue(vs)
@@ -348,9 +373,7 @@ class IriTop:
 
     def show_string(self, row, col, label, value):
 
-        height, width = self.term.height, self.term.width  # vars not used?
-
-        x1 = (width // 3) * col
+        x1 = (self.width // 3) * col
         x2 = x1 + 18
 
         print(self.term.move(row, x1) + self.term.cyan(label + ":"))
@@ -360,13 +383,11 @@ class IriTop:
     def show_histogram(self, row, col, label, value, value_max,
                        warning_limit=0.8, span=1):
 
-        height, width = self.term.height, self.term.width  # vars not used?
-
         label_width = 18
-        col_width = ((width // 3) - label_width) + ((span - 1) * (width // 3))
-        x1 = (width // 3) * col
+        col_width = ((self.width // 3) - label_width) + \
+                    ((span - 1) * (self.width // 3))
+        x1 = (self.width // 3) * col
         x2 = x1 + label_width
-        #b1 = x2 + 1 #  Not used?
         bw = col_width - 2
 
         vm = bw
@@ -400,7 +421,7 @@ class IriTop:
         height, width = self.term.height, self.term.width
         cw = width // cols
         cw1 = width - ((cols - 1) * cw)
-        cwl = [0,]
+        cwl = [0, ]
         for c in range(cols - 1):
             cwl.append(cw1 + (c * cw))
 
@@ -425,94 +446,70 @@ class IriTop:
             row += 1
 
         print(self.term.move(height - 2, 0 * cw) +
-              self.term.black_on_cyan("Press q to exit".ljust(width)))    
+              self.term.black_on_cyan(
+                    "Press Q to exit - "
+                    "Press B to reset tx to a zero baseline".ljust(width)))
 
         ITER += 1
-    
-    def show_neighbor(self, row, neighbor, column_start_list, column_width, height):
+
+    def txString(self, neighbor, key, keydelta, keyshort, column_width):
+        txcnt = neighbor[key] - (self.baseline[self.getBaselineKey(neighbor,
+                                 keyshort)] * self.baselineToggle)
+        return ("%d (%d)" % (txcnt, neighbor[keydelta])).rjust(column_width)
+
+    def show_neighbor(self, row, neighbor, column_start_list,
+                      column_width, height):
         global ITER
-        
-        addr = neighbor['connectionType'] + "://" + neighbor['address']
-        at = "%d (%d)" % (neighbor['numberOfAllTransactions'],
-                          neighbor['numberOfAllTransactionsDelta'])
-        at = at.rjust(column_width)
 
-        it = "%d (%d)" % (neighbor['numberOfInvalidTransactions'],
-                          neighbor['numberOfInvalidTransactionsDelta'])
-        it = it.rjust(column_width)
+        neighbor['addr'] = neighbor['connectionType'] + \
+            "://" + neighbor['address']
 
-        nt = "%d (%d)" % (neighbor['numberOfNewTransactions'],
-                          neighbor['numberOfNewTransactionsDelta'])
-        nt = nt.rjust(column_width)
+        # Create display string
+        for txkey in self.txkeys:
+            neighbor[txkey['keyshort']] = \
+                    self.txString(neighbor,
+                                  txkey['key'],
+                                  '%sDelta' % txkey['key'],
+                                  txkey['keyshort'],
+                                  column_width)
 
-        rt = "%d (%d)" % (neighbor['numberOfRandomTransactionRequests'],
-                          neighbor['numberOfRandomTransactionRequestsDelta'])
-        rt = rt.rjust(column_width)
-
-        st = "%d (%d)" % (neighbor['numberOfSentTransactions'],
-                          neighbor['numberOfSentTransactionsDelta'])
-        st = st.rjust(column_width)
-
-        xt = "%d (%d)" % (neighbor['numberOfStaleTransactions'],
-                          neighbor['numberOfStaleTransactionsDelta'])
-        xt = xt.rjust(column_width)
-
+        # Highlight neighbors that are incommunicade
         if (neighbor['numberOfAllTransactionsDelta'] == 0 and ITER > 12):
-            addr = self.term.bright_red("(!) " + addr)
+            neighbor['addr'] = self.term.bright_red("(!) " + neighbor['addr'])
 
         value_at = "neighbor-%s-at" % neighbor['address']
         if (value_at in self.prev and
-          neighbor['numberOfAllTransactions'] != self.prev[value_at]):
-            at = self.term.cyan(at)
+                neighbor['numberOfAllTransactions'] != self.prev[value_at]):
+            neighbor['at'] = self.term.cyan(neighbor['at'])
 
         if neighbor['numberOfInvalidTransactions'] > 0:
-            it = \
+            neighbor['it'] = \
                 self.term.red(str(neighbor['numberOfInvalidTransactions'])
-                         .rjust(column_width))
+                              .rjust(column_width))
 
-        value_it = "neighbor-%s-it" % neighbor['address']
-        if (value_it in self.prev and
-          neighbor['numberOfInvalidTransactions'] != self.prev[value_it]):
-            it = self.term.cyan(it)
-
-        value_nt = "neighbor-%s-nt" % neighbor['address']
-        if (value_nt in self.prev and
-          neighbor['numberOfNewTransactions'] != self.prev[value_nt]):
-            nt = self.term.cyan(nt)
-
-        value_rt = "neighbor-%s-rt" % neighbor['address']
-        if (value_rt in self.prev and
-          neighbor['numberOfRandomTransactionRequests'] != self.prev[value_rt]):
-            rt = self.term.cyan(rt)
-
-        value_st = "neighbor-%s-st" % neighbor['address']
-        if (value_st in self.prev and
-          neighbor['numberOfSentTransactions'] != self.prev[value_st]):
-            st = self.term.cyan(st)
-
-        if neighbor['numberOfStaleTransactions'] > 0:
-            xt = self.term.yellow(xt)
-        value_xt = "neighbor-%s-xt" % neighbor['address']
-        if (value_xt in self.prev and
-          neighbor['numberOfStaleTransactions'] != self.prev[value_xt]):
-            xt = self.term.cyan(xt)
+        # Blink changed value
+        for txkey in self.txkeys:
+            neighborkey = "neighbor-%s-%s" % (neighbor['address'],
+                                              txkey['keyshort'])
+            if (neighborkey in self.prev and
+                    neighbor[txkey['key']] != self.prev[neighborkey]):
+                neighbor[txkey['keyshort']] = \
+                    self.term.cyan(neighbor[txkey['keyshort']])
 
         # do not display any neighbors crossing the height of the terminal
         if row < height - 2:
-            print(self.term.move(row, column_start_list[0]) + self.term.white(addr))
-            print(self.term.move(row, column_start_list[3]) + self.term.green(at))
-            print(self.term.move(row, column_start_list[4]) + self.term.green(nt))
-            print(self.term.move(row, column_start_list[5]) + self.term.green(st))
-            print(self.term.move(row, column_start_list[6]) + self.term.green(rt))
-            print(self.term.move(row, column_start_list[7]) + self.term.green(it))
-            print(self.term.move(row, column_start_list[8]) + self.term.green(xt))
+            print(self.term.move(row, column_start_list[0]) +
+                  self.term.white(neighbor['addr'] + "    "))
+            for txkey in self.txkeys:
+                print(self.term.move(row, column_start_list[txkey['col']]) +
+                      self.term.green(neighbor[txkey['keyshort']]))
 
-        self.prev[value_at] = neighbor['numberOfAllTransactions']
-        self.prev[value_it] = neighbor['numberOfInvalidTransactions']
-        self.prev[value_nt] = neighbor['numberOfNewTransactions']
-        self.prev[value_rt] = neighbor['numberOfRandomTransactionRequests']
-        self.prev[value_st] = neighbor['numberOfSentTransactions']
-        self.prev[value_xt] = neighbor['numberOfStaleTransactions']
+        # Store previous value
+        for txkey in self.txkeys:
+            neighborkey = "neighbor-%s-%s" % (neighbor['address'],
+                                              txkey['keyshort'])
+            self.prev[neighborkey] = neighbor[txkey['key']]
+
 
 if __name__ == '__main__':
     main()
