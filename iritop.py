@@ -13,7 +13,7 @@ from curses import wrapper
 from scramble import scrambleAddress
 
 
-__VERSION__ = '0.3.1'
+__VERSION__ = '0.3.2'
 
 """\
 Simple Iota IRI Node Monitor
@@ -268,6 +268,13 @@ class IriTop:
 
                     tlast = int(time.time())
 
+                    for neighbor in neighbors:
+                        for txkey in self.txkeys:
+                            if txkey['key'] not in neighbor:
+                                neighbor[txkey['key']] = 0
+                                neighbor[txkey['keyshort']] = 0
+                                neighbor['%sDelta' % txkey['key']] = 0
+
                     # Keep history of tx
                     tx_history = {}
                     for neighbor in neighbors:
@@ -294,7 +301,8 @@ class IriTop:
                             print(self.term.clear)
 
                 print(self.term.move(0, 0) + self.term.black_on_cyan(
-                      "IRITop - Simple IOTA IRI Node Monitor (%s)".ljust(self.width) % __VERSION__))
+                      "IRITop - Simple IOTA IRI Node Monitor (%s)"
+                      .ljust(self.width) % __VERSION__))
 
                 for neighbor in neighbors:
                     for txkey in self.txkeys:
@@ -482,7 +490,7 @@ class IriTop:
         global ITER
 
         neighbor['addr'] = self.showAddress(neighbor['connectionType'] +
-            "://" + neighbor['address'])
+                                            "://" + neighbor['address'])
 
         # Create display string
         for txkey in self.txkeys:

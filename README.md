@@ -44,7 +44,7 @@ pip install -r requirements.txt
   -t URL_TIMEOUT, --url-timeout URL_TIMEOUT
                         URL Timeout. Default: 5s
   -o OBSCURE_TOGGLE, --obscure-address OBSCURE_TOGGLE
-                        Obscure addresses. Default: 0 (use 1 for to switch address obscuring On)
+                        Obscure addresses. Default: Off
 
 ```
 
