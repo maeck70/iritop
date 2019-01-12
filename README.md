@@ -24,7 +24,9 @@ pip install -r requirements.txt
 
 - Start without a `--node` argument will assume 'http://localhost:14265' as the node address for the web service calls.
 - Provide an address using `--node http://myirinode:14265` if you want to specify a specific address.
-- Use 'q' to exit from the tool.
+- Use 'Q' to exit from the tool.
+- Use 'B' to toggle into baseline mode (baseline mode zeroes all transactions and shows increment from baseline mode start).
+- Use 'O' to obscure addresses (Helpful if you desire to post a screenshot of the IRI node status).
 
 ## Arguments
 
@@ -41,6 +43,9 @@ pip install -r requirements.txt
                         blink delay. Default: 0.5s
   -t URL_TIMEOUT, --url-timeout URL_TIMEOUT
                         URL Timeout. Default: 5s
+  -o OBSCURE_TOGGLE, --obscure-address OBSCURE_TOGGLE
+                        Obscure addresses. Default: 0 (use 1 for to switch address obscuring On)
+
 ```
 
 ## Configuration File
