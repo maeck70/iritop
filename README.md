@@ -11,6 +11,14 @@ Where possible, the tool will highlight where the statistics are outside the nor
 
 ![IRITopScreenshot](https://raw.githubusercontent.com/maeck70/iritop/master/img/IRITop.png)
 
+##Requirements
+
+Requirements can be installed via:
+
+```sh
+pip install -r requirements.txt
+```
+
 ##Usage:
 - Start without a --node argument will assume 'http://localhost:14265' as the node address for the web service calls.
 - Provide an address using --node http://myirinode:14265 if you want to specify a specific address.

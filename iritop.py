@@ -12,7 +12,7 @@ from os import path
 from curses import wrapper
 
 
-__VERSION__ = '0.2.4'
+__VERSION__ = '0.2.5'
 
 """\
 Simple Iota IRI Node Monitor
@@ -29,9 +29,9 @@ https://github.com/maeck70/iritop
 
 
 try:
-    import urllib2
+    import urllib3
 except ImportError:
-    sys.stderr.write("Missing python urllib2? Install via 'pip install urllib2'"
+    sys.stderr.write("Missing python urllib3? Install via 'pip install urllib3'"
                      "\n")
     sys.exit(1)
 
@@ -67,10 +67,12 @@ def parse_args():
 
     parser = argparse.ArgumentParser(
         description='IRI Top status viewer',
-        version=__VERSION__,
         epilog='Configuration can also be set in yaml formatted file.'
                ' For the configuration keys omit prefix hyphen - or --, and'
                ' replace all other instances of - with _')
+
+    parser.add_argument('--version', '-v', action='version',
+                        version='iritop %s' % __VERSION__)
 
     parser.add_argument('-c', '--config', type=read_config,
                         help="configuration file. Defaults to ~/.iritop",
@@ -150,37 +152,35 @@ def url(url):
 
 def read_config(config_file):
     with open(config_file) as fh:
-        return yaml.load(fh)
+        try:
+            data = yaml.load(fh)
+        except yaml.parser.ParserError as e:
+            raise Exception("Error parsing yaml configuration file '%s': %s" %
+                            (config_file, e))
+        except Exception as e:
+            raise Exception("Error reading configuration file '%s': %s" %
+                            (config_file, e))
+    return data
 
 
-def fetch_data(data):
+def fetch_data(data_to_send, method='POST'):
     global NODE
     global HEADERS
     global URL_TIMEOUT
 
-    try:
-        request = urllib2.Request(url=NODE,
-                                  data=data,
-                                  headers=HEADERS)
-    except Exception as e:
-        sys.stderr.write("Fatal error: %s" % e)
-        sys.exit(1)
+    http = urllib3.PoolManager()
 
-    response = None
     try:
-        response = urllib2.urlopen(request, timeout=URL_TIMEOUT)
-    except urllib2.HTTPError as e:
-        msg = e.read()
-        return None, 'Request failed with code: %d, response: %s' % (e.code,
-                                                                     msg)
-    except urllib2.URLError as e:
-        return None, 'Request failed'
-    except socket.timeout as e:
-        return None, 'Request timed out'
+        data = json.dumps(data_to_send)
+        response = http.request(method,
+                                NODE,
+                                body=data,
+                                timeout=URL_TIMEOUT,
+                                headers=HEADERS)
     except Exception as e:
-        return None, 'Unknown error'
+        return None, 'Unknown error: %s' % e
 
-    return json.loads(response.read()), None
+    return json.loads(response.data.decode('utf-8')), None
 
 
 class IriTop:
@@ -190,8 +190,8 @@ class IriTop:
         self.prev = {}
         self.poll_delay = args.poll_delay
         self.blink_delay = args.blink_delay
-        self.commands = ["{'command': 'getNeighbors'}",
-                         "{'command': 'getNodeInfo'}"]
+        self.commands = [{'command': 'getNeighbors'},
+                         {'command': 'getNodeInfo'}]
 
     def run(self, stdscr):
 
