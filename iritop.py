@@ -13,7 +13,7 @@ from curses import wrapper
 from scramble import scrambleAddress
 
 
-__VERSION__ = '0.3.2'
+__VERSION__ = '0.3.3'
 
 """\
 Simple Iota IRI Node Monitor
@@ -226,6 +226,7 @@ class IriTop:
         self.height = 0
         self.oldheight = 0
         self.oldwidth = 0
+        self.incommunicados = 0
 
     def run(self, stdscr):
 
@@ -336,7 +337,11 @@ class IriTop:
                 self.show(4, 2, "txToRequest", node, "transactionsToRequest")
 
                 self.show_string(5, 0, "Node Address", self.showAddress(NODE))
-                self.show(5, 2, "neighbors", node, "neighbors")
+
+                neighborCount = "%s" % node['neighbors']
+                if self.incommunicados > 0:
+                    neighborCount += self.term.bright_red(" / %d" % self.incommunicados)
+                self.show_string(5, 2, "neighbors", neighborCount)
 
                 self.show_string(6, 0, "Baseline",
                                  self.baselineStr[self.baselineToggle])
@@ -453,6 +458,8 @@ class IriTop:
         for c in range(cols - 1):
             cwl.append(cw1 + (c * cw))
 
+        self.incommunicados = 0
+
         print(self.term.move(row, cwl[0]) +
               self.term.black_on_green("Neighbor Address".ljust(cw*4)))
         print(self.term.move(row, cwl[3]) +
@@ -504,6 +511,7 @@ class IriTop:
         # Highlight neighbors that are incommunicade
         if (neighbor['numberOfAllTransactionsDelta'] == 0 and ITER > 12):
             neighbor['addr'] = self.term.bright_red("(!) " + neighbor['addr'])
+            self.incommunicados += 1
 
         value_at = "neighbor-%s-at" % neighbor['address']
         if (value_at in self.prev and
