@@ -24,6 +24,7 @@ pip install -r requirements.txt
 
 - Start without a `--node` argument will assume 'http://localhost:14265' as the node address for the web service calls.
 - Provide an address using `--node http://myirinode:14265` if you want to specify a specific address.
+- Use 'q' to exit from the tool.
 
 ## Arguments
 
@@ -53,5 +54,3 @@ node: http://mynode.com:14265
 poll_delay: 2
 blink_delay: 0.3
 ```
-
-Use 'q' to exit from the tool.

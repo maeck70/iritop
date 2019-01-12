@@ -7,11 +7,13 @@ import sys
 import time
 import json
 import yaml
+import random
 from os import path
 from curses import wrapper
+from scramble import scrambleAddress
 
 
-__VERSION__ = '0.3.0'
+__VERSION__ = '0.3.1'
 
 """\
 Simple Iota IRI Node Monitor
@@ -56,6 +58,7 @@ HEADERS = {'Content-Type': 'application/json',
 
 BLINK_DELAY = 0.5
 POLL_DELAY = 2
+OBSCURE_TOGGLE = 0
 ITER = 0
 MB = 1024 * 1024
 
@@ -65,6 +68,7 @@ def parse_args():
     global BLINK_DELAY
     global POLL_DELAY
     global URL_TIMEOUT
+    global OBSCURE_TOGGLE
 
     parser = argparse.ArgumentParser(
         description='IRI Top status viewer',
@@ -92,6 +96,9 @@ def parse_args():
     parser.add_argument("-t", "--url-timeout", type=int,
                         help="URL Timeout. Default: %ss" % URL_TIMEOUT)
 
+    parser.add_argument("-o", "--obscure-address", action='store_true',
+                        help="Obscure addresses. Default: Off")
+
     # Get configuration file if exists
     home_dir = path.expanduser("~")
     if path.isfile(home_dir + '/.iritop'):
@@ -105,6 +112,8 @@ def parse_args():
         args.blink_delay = BLINK_DELAY
     if args.poll_delay is None:
         args.poll_delay = POLL_DELAY
+    if args.obscure_address is None:
+        args.obscure_address = OBSCURE_TOGGLE
     if args.node is not None:
         NODE = args.node
 
@@ -198,19 +207,21 @@ class IriTop:
                          {'command': 'getNodeInfo'}]
         self.txkeys = [{'keyshort': 'at',
                         'key': 'numberOfAllTransactions', 'col': 3},
-                       {'keyshort': 'st',
-                        'key': 'numberOfSentTransactions', 'col': 5},
                        {'keyshort': 'nt',
                         'key': 'numberOfNewTransactions', 'col': 4},
+                       {'keyshort': 'st',
+                        'key': 'numberOfSentTransactions', 'col': 5},
                        {'keyshort': 'rt',
                         'key': 'numberOfRandomTransactionRequests', 'col': 6},
-                       {'keyshort': 'xt',
-                        'key': 'numberOfStaleTransactions', 'col': 8},
                        {'keyshort': 'it',
-                        'key': 'numberOfInvalidTransactions', 'col': 7}, ]
+                        'key': 'numberOfInvalidTransactions', 'col': 7},
+                       {'keyshort': 'xt',
+                        'key': 'numberOfStaleTransactions', 'col': 8}, ]
+        self.randSeed = random.randint(0, 100000)
         self.baseline = dict()
         self.baselineStr = ['Off', 'On']
         self.baselineToggle = 0
+        self.obscureAddrToggle = args.obscure_address
         self.width = 0
         self.height = 0
         self.oldheight = 0
@@ -228,6 +239,9 @@ class IriTop:
             self.hist = {}
 
             while val.lower() != 'q':
+
+                random.seed(self.randSeed)
+
                 val = self.term.inkey(timeout=self.blink_delay)
 
                 self.oldheight, self.oldwidth = self.height, self.width
@@ -262,8 +276,10 @@ class IriTop:
                                             txkey['key'],
                                             tx_history,
                                             neighbor)
-
                     self.hist = tx_history
+
+                if val.lower() == 'o':
+                    self.obscureAddrToggle = self.obscureAddrToggle ^ 1
 
                 if val.lower() == 'b':
                     for neighbor in neighbors:
@@ -278,8 +294,7 @@ class IriTop:
                             print(self.term.clear)
 
                 print(self.term.move(0, 0) + self.term.black_on_cyan(
-                      "IRITop - Simple IOTA IRI Node Monitor"
-                      .ljust(self.width)))
+                      "IRITop - Simple IOTA IRI Node Monitor (%s)".ljust(self.width) % __VERSION__))
 
                 for neighbor in neighbors:
                     for txkey in self.txkeys:
@@ -312,13 +327,18 @@ class IriTop:
                 self.show(4, 1, "tips", node, "tips")
                 self.show(4, 2, "txToRequest", node, "transactionsToRequest")
 
-                self.show_string(5, 0, "Node Address", NODE)
+                self.show_string(5, 0, "Node Address", self.showAddress(NODE))
                 self.show(5, 2, "neighbors", node, "neighbors")
 
                 self.show_string(6, 0, "Baseline",
                                  self.baselineStr[self.baselineToggle])
 
                 self.show_neighbors(7, neighbors)
+
+    def showAddress(self, address):
+        if self.obscureAddrToggle == 1:
+            return scrambleAddress(address)
+        return address
 
     def getBaselineKey(self, neighbor, subkey):
         return "%s:%s" % (neighbor['address'], subkey)
@@ -461,8 +481,8 @@ class IriTop:
                       column_width, height):
         global ITER
 
-        neighbor['addr'] = neighbor['connectionType'] + \
-            "://" + neighbor['address']
+        neighbor['addr'] = self.showAddress(neighbor['connectionType'] +
+            "://" + neighbor['address'])
 
         # Create display string
         for txkey in self.txkeys:
