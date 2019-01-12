@@ -214,8 +214,7 @@ class IriTop:
         self.width = 0
         self.height = 0
         self.oldheight = 0
-        self.oldwidth = 0 
-
+        self.oldwidth = 0
 
     def run(self, stdscr):
 
@@ -274,8 +273,9 @@ class IriTop:
                                           neighbor[txkey['key']]
                     self.baselineToggle = self.baselineToggle ^ 1
 
-                if (self.oldheight != self.height) or (self.oldwidth != self.width):
-                    print(self.term.clear)
+                if ((self.oldheight != self.height) or
+                        (self.oldwidth != self.width)):
+                            print(self.term.clear)
 
                 print(self.term.move(0, 0) + self.term.black_on_cyan(
                       "IRITop - Simple IOTA IRI Node Monitor"
