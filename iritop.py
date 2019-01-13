@@ -8,7 +8,7 @@ import time
 import json
 import yaml
 import random
-from os import path
+from os import (path, environ)
 from curses import wrapper
 
 
@@ -171,6 +171,11 @@ def main():
     except Exception as e:
         sys.stderr.write("Error parsing arguments: %s\n" % e)
         sys.exit(1)
+
+    # Force set locale to ensure blessed term
+    # also works when those are missing
+    environ['LC_ALL'] = 'en_US.UTF-8'
+    environ['LC_CTYPE'] = 'en_US.UTF-8'
 
     iri_top = IriTop(args)
     wrapper(iri_top.run)
