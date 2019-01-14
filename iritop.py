@@ -8,11 +8,11 @@ import time
 import json
 import yaml
 import random
-from os import (path, environ)
+from os import (path, environ, getloadavg)
 from curses import wrapper
 
 
-__VERSION__ = '0.4.0'
+__VERSION__ = '0.4.1'
 
 """\
 Simple Iota IRI Node Monitor
@@ -274,7 +274,12 @@ class IriTop:
         self.oldheight = 0
         self.oldwidth = 0
         self.incommunicados = 0
+        self.localhost = False
 
+        for l in ('localhost', '127.0.0.1'):
+            if l in NODE.lower(): 
+                self.localhost = True
+ 
     def run(self, stdscr):
 
         stdscr.clear()
@@ -394,6 +399,9 @@ class IriTop:
 
                 self.show_string(6, 0, "Baseline",
                                  self.baselineStr[self.baselineToggle])
+
+                if self.localhost:
+                    self.show_string(6, 2, "Load Average", getloadavg())
 
                 self.show_neighbors(7, neighbors)
 
