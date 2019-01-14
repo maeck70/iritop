@@ -8,7 +8,6 @@ import time
 import json
 import yaml
 import random
-from urlparse import urlparse
 from subprocess import check_output
 from os import (path, environ, getloadavg)
 from curses import wrapper
@@ -44,6 +43,11 @@ except ImportError:
     sys.stderr.write("Missing python blessed package? Install via 'pip install"
                      " blessed'\n")
     sys.exit(1)
+
+try:
+    from urlparse import urlparse  # python 2
+except ImportError:
+    from urllib.parse import urlparse  # python 3
 
 
 # Url request timeout
