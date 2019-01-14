@@ -13,7 +13,7 @@ from os import (path, environ, getloadavg)
 from curses import wrapper
 
 
-__VERSION__ = '0.4.4'
+__VERSION__ = '0.4.5'
 
 """\
 Simple Iota IRI Node Monitor
@@ -285,10 +285,14 @@ class IriTop:
         self.oldwidth = 0
         self.incommunicados = 0
         self.localhost = self.set_local_node()
+        self.duration_hist = list()
+        self.duration = 0
+        self.duration_avg = 0
 
     @property
     def get_local_ips(self):
-        return check_output(['/bin/hostname', '--all-ip-addresses']).rstrip().split()
+        return check_output(['/bin/hostname', '--all-ip-addresses']
+                            ).rstrip().split()
 
     def set_local_node(self):
         local_ips = ['localhost', '127.0.0.1', '::1']
@@ -296,7 +300,7 @@ class IriTop:
         if urlparse(NODE.lower()).hostname in local_ips:
             return True
         return False
- 
+
     def run(self, stdscr):
 
         stdscr.clear()
@@ -319,8 +323,11 @@ class IriTop:
 
                 if int(time.time()) - tlast > self.poll_delay:
 
+                    startTime = int(round(time.time() * 1000))
                     results = [fetch_data(self.commands[i]) for i
                                in range(len(self.commands))]
+                    endTime = int(round(time.time() * 1000))
+                    self.logDuration(endTime - startTime)
 
                     neighbors = None
                     node = None
@@ -407,6 +414,10 @@ class IriTop:
 
                 self.show_string(5, 0, "Node Address", self.showAddress(NODE))
 
+                self.show_string(6, 0, "Baseline",
+                                 self.baselineStr[self.baselineToggle])
+                self.show_string(6, 1, "Response Time", "%s ms Avg: %s ms" %
+                                 (self.duration, self.duration_avg))
                 neighborCount = "%s" % node['neighbors']
                 if self.incommunicados > 0:
                     neighborCount += self.term.red(" / %d " %
@@ -415,13 +426,16 @@ class IriTop:
                     neighborCount += "    "
                 self.show_string(5, 2, "neighbors", neighborCount)
 
-                self.show_string(6, 0, "Baseline",
-                                 self.baselineStr[self.baselineToggle])
-
                 if self.localhost:
                     self.show_string(6, 2, "Load Average", getloadavg())
 
                 self.show_neighbors(7, neighbors)
+
+    def logDuration(self, duration):
+        self.duration = duration
+        self.duration_hist.append(duration)
+        self.duration_avg = int(sum(self.duration_hist) /
+                                len(self.duration_hist))
 
     def showAddress(self, address):
         if self.obscureAddrToggle == 1:
@@ -585,7 +599,8 @@ class IriTop:
                                   column_width)
 
         # Highlight neighbors that are incommunicade
-        if (neighbor['numberOfAllTransactionsDelta'] == 0 and ITER > (6 * self.poll_delay)):
+        if (neighbor['numberOfAllTransactionsDelta'] == 0 and
+                ITER > (6 * self.poll_delay)):
             neighbor['addr'] = self.term.red("(!) " + neighbor['addr'])
             self.incommunicados += 1
 
