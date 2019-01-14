@@ -569,7 +569,7 @@ class IriTop:
                                   column_width)
 
         # Highlight neighbors that are incommunicade
-        if (neighbor['numberOfAllTransactionsDelta'] == 0 and ITER > 12):
+        if (neighbor['numberOfAllTransactionsDelta'] == 0 and ITER > (6 * self.poll_delay)):
             neighbor['addr'] = self.term.red("(!) " + neighbor['addr'])
             self.incommunicados += 1
 
