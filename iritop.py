@@ -427,7 +427,7 @@ class IriTop:
         x1 = (self.width // 3) * col
         x2 = x1 + 18
 
-        vs = self.term.cyan(str(dictionary[value]))
+        vs = self.term.bright_cyan(str(dictionary[value]))
 
         # Highlight if no neighbors
         if value == "neighbors" and dictionary[value] == 0:
@@ -460,7 +460,7 @@ class IriTop:
 
         print(self.term.move(row, x1) + self.term.cyan(label + ":"))
         print(self.term.move(row, x2) +
-              self.term.cyan(str(value) + "  "))
+              self.term.bright_cyan(str(value) + "  "))
 
     def show_histogram(self, row, col, label, value, value_max,
                        warning_limit=0.8, span=1):
@@ -494,7 +494,7 @@ class IriTop:
               + self.term.green("|" * mG)
               + self.term.yellow("|" * mY)
               + self.term.red("#" * mR)
-              + self.term.blue("-" * mB)
+              + self.term.bright_black("-" * mB)
               + self.term.white("]"))
 
     def show_neighbors(self, row, neighbors):
