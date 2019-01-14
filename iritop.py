@@ -428,6 +428,8 @@ class IriTop:
 
                 if self.localhost:
                     self.show_string(6, 2, "Load Average", getloadavg())
+                else:
+                    self.show_string(6, 2, "Load Average", 'N/A')
 
                 self.show_neighbors(7, neighbors)
 
