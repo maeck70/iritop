@@ -436,6 +436,9 @@ class IriTop:
         self.duration_hist.append(duration)
         self.duration_avg = int(sum(self.duration_hist) /
                                 len(self.duration_hist))
+        # Limit history to the last 5 minutes of calls
+        if len(self.duration_hist) > (60*5/self.poll_delay):
+            del self.duration_hist[0]
 
     def showAddress(self, address):
         if self.obscureAddrToggle == 1:
