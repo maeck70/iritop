@@ -287,7 +287,7 @@ class IriTop:
 
         print("IRITop connecting to node %s..." % NODE)
 
-        with self.term.cbreak():
+        with self.term.hidden_cursor():
             val = ""
             tlast = 0
             self.hist = {}
