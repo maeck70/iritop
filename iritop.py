@@ -12,7 +12,7 @@ from os import (path, environ)
 from curses import wrapper
 
 
-__VERSION__ = '0.3.3'
+__VERSION__ = '0.4.0'
 
 """\
 Simple Iota IRI Node Monitor
@@ -53,8 +53,13 @@ NODE = "http://localhost:14265"
 # Headers for HTTP call
 HEADERS = {'Content-Type': 'application/json',
            'Accept-Charset': 'UTF-8',
-           'X-IOTA-API-Version': '1'}
+           'X-IOTA-API-Version': '1',
+           # 'USERNAME': 'iota',
+           # 'PASSWORD': 'secret8080coin',
+           }
 
+USERNAME = ""
+PASSWORD = ""
 BLINK_DELAY = 0.5
 POLL_DELAY = 2
 OBSCURE_TOGGLE = 0
@@ -68,6 +73,8 @@ def parse_args():
     global POLL_DELAY
     global URL_TIMEOUT
     global OBSCURE_TOGGLE
+    global USERNAME
+    global PASSWORD
 
     parser = argparse.ArgumentParser(
         description='IRI Top status viewer',
@@ -94,6 +101,12 @@ def parse_args():
 
     parser.add_argument("-t", "--url-timeout", type=int,
                         help="URL Timeout. Default: %ss" % URL_TIMEOUT)
+
+    # parser.add_argument("-u", "--username", type=str,
+    #                     help="IRI Username. Default: bypass")
+
+    # parser.add_argument("-p", "--password", type=str,
+    #                     help="IRI Password. Default: bypass")
 
     parser.add_argument("-o", "--obscure-address", action='store_true',
                         help="Obscure addresses. Default: Off")
@@ -374,7 +387,7 @@ class IriTop:
 
                 neighborCount = "%s" % node['neighbors']
                 if self.incommunicados > 0:
-                    neighborCount += self.term.bright_red(" / %d " % self.incommunicados)
+                    neighborCount += self.term.red(" / %d " % self.incommunicados)
                 else:
                     neighborCount += "    "
                 self.show_string(5, 2, "neighbors", neighborCount)
@@ -414,11 +427,11 @@ class IriTop:
         x1 = (self.width // 3) * col
         x2 = x1 + 18
 
-        vs = self.term.bright_cyan(str(dictionary[value]))
+        vs = self.term.cyan(str(dictionary[value]))
 
         # Highlight if no neighbors
         if value == "neighbors" and dictionary[value] == 0:
-            vs = self.term.bright_red(str(dictionary[value]))
+            vs = self.term.red(str(dictionary[value]))
 
         # Highlight if latest milestone is out of sync with the solid milestone
         if value == "latestSolidSubtangleMilestoneIndex":
@@ -427,9 +440,9 @@ class IriTop:
 
             if diff != 0:
                 if diff <= 2:
-                    vs = self.term.bright_yellow(str(dictionary[value]) + "*")
+                    vs = self.term.yellow(str(dictionary[value]) + "*")
                 else:
-                    vs = self.term.bright_yellow_on_red(
+                    vs = self.term.yellow_on_red(
                             str(dictionary[value]) + " (!)")
 
         if value in self.prev and dictionary[value] != self.prev[value]:
@@ -447,7 +460,7 @@ class IriTop:
 
         print(self.term.move(row, x1) + self.term.cyan(label + ":"))
         print(self.term.move(row, x2) +
-              self.term.bright_cyan(str(value) + "  "))
+              self.term.cyan(str(value) + "  "))
 
     def show_histogram(self, row, col, label, value, value_max,
                        warning_limit=0.8, span=1):
@@ -478,10 +491,10 @@ class IriTop:
         print(self.term.move(row, x1) + self.term.cyan(label + ":"))
         print(self.term.move(row, x2)
               + self.term.white("[")
-              + self.term.bright_green("|" * mG)
-              + self.term.bright_yellow("|" * mY)
-              + self.term.bright_red("+" * mR)
-              + self.term.bright_black("-" * mB)
+              + self.term.green("|" * mG)
+              + self.term.yellow("|" * mY)
+              + self.term.red("#" * mR)
+              + self.term.blue("-" * mB)
               + self.term.white("]"))
 
     def show_neighbors(self, row, neighbors):
@@ -519,7 +532,8 @@ class IriTop:
         print(self.term.move(height - 2, 0 * cw) +
               self.term.black_on_cyan(
                     "Press Q to exit - "
-                    "Press B to reset tx to a zero baseline".ljust(width)))
+                    "Press B to reset tx to a zero baseline -"
+                    "Press O to obscure addresses".ljust(width)))
 
         ITER += 1
 
@@ -546,7 +560,7 @@ class IriTop:
 
         # Highlight neighbors that are incommunicade
         if (neighbor['numberOfAllTransactionsDelta'] == 0 and ITER > 12):
-            neighbor['addr'] = self.term.bright_red("(!) " + neighbor['addr'])
+            neighbor['addr'] = self.term.red("(!) " + neighbor['addr'])
             self.incommunicados += 1
 
         value_at = "neighbor-%s-at" % neighbor['address']
