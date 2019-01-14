@@ -279,6 +279,7 @@ class IriTop:
         for l in ('localhost', '127.0.0.1'):
             if l in NODE.lower(): 
                 self.localhost = True
+                break
  
     def run(self, stdscr):
 
