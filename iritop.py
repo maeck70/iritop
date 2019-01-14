@@ -12,7 +12,7 @@ from os import (path, environ)
 from curses import wrapper
 
 
-__VERSION__ = '0.4.0'
+__VERSION__ = '0.4.1'
 
 """\
 Simple Iota IRI Node Monitor
@@ -281,7 +281,7 @@ class IriTop:
 
         print("IRITop connecting to node %s..." % NODE)
 
-        with self.term.cbreak():
+        with self.term.hidden_cursor():
             val = ""
             tlast = 0
             self.hist = {}
