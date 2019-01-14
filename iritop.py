@@ -8,11 +8,13 @@ import time
 import json
 import yaml
 import random
+from urlparse import urlparse
+from subprocess import check_output
 from os import (path, environ, getloadavg)
 from curses import wrapper
 
 
-__VERSION__ = '0.4.1'
+__VERSION__ = '0.4.2'
 
 """\
 Simple Iota IRI Node Monitor
@@ -223,7 +225,7 @@ def read_config(config_file):
     return data
 
 
-def fetch_data(data_to_send, method='POST'):
+def fetch_data(data_to_send, method='POST', status_ok=200):
     global NODE
     global HEADERS
     global URL_TIMEOUT
@@ -240,7 +242,11 @@ def fetch_data(data_to_send, method='POST'):
     except Exception as e:
         return None, 'Unknown error: %s' % e
 
-    return json.loads(response.data.decode('utf-8')), None
+    if response.status == status_ok:
+        return json.loads(response.data.decode('utf-8')), None
+    else:
+        raise Exception("Error response from node: code %d, response: '%s'" %
+                        (response.status, response.data))
 
 
 class IriTop:
@@ -274,12 +280,18 @@ class IriTop:
         self.oldheight = 0
         self.oldwidth = 0
         self.incommunicados = 0
-        self.localhost = False
+        self.localhost = self.set_local_node()
 
-        for l in ('localhost', '127.0.0.1'):
-            if l in NODE.lower(): 
-                self.localhost = True
-                break
+    @property
+    def get_local_ips(self):
+        return check_output(['/bin/hostname', '--all-ip-addresses']).rstrip().split()
+
+    def set_local_node(self):
+        local_ips = ['localhost', '127.0.0.1', '::1']
+        local_ips.extend(self.get_local_ips)
+        if urlparse(NODE.lower()).hostname in local_ips:
+            return True
+        return False
  
     def run(self, stdscr):
 
