@@ -409,7 +409,8 @@ class IriTop:
 
                 neighborCount = "%s" % node['neighbors']
                 if self.incommunicados > 0:
-                    neighborCount += self.term.red(" / %d " % self.incommunicados)
+                    neighborCount += self.term.red(" / %d " %
+                                                   self.incommunicados)
                 else:
                     neighborCount += "    "
                 self.show_string(5, 2, "neighbors", neighborCount)
@@ -584,7 +585,7 @@ class IriTop:
                                   column_width)
 
         # Highlight neighbors that are incommunicade
-        if (neighbor['numberOfAllTransactionsDelta'] == 0 and ITER > 12):
+        if (neighbor['numberOfAllTransactionsDelta'] == 0 and ITER > (6 * self.poll_delay)):
             neighbor['addr'] = self.term.red("(!) " + neighbor['addr'])
             self.incommunicados += 1
 
