@@ -13,7 +13,7 @@ from os import (path, environ, getloadavg)
 from curses import wrapper
 
 
-__VERSION__ = '0.4.2'
+__VERSION__ = '0.4.4'
 
 """\
 Simple Iota IRI Node Monitor
