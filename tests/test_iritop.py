@@ -56,7 +56,6 @@ class TestArgParser(unittest.TestCase):
             self.set_new_args(['--node=' + node])
             self.assertEqual(self.args.node, node)
 
-
     def test_invalid_node_url(self):
         """
         Test invalid node URLs
@@ -122,14 +121,14 @@ class TestFetchData(unittest.TestCase):
        result = iritop.fetch_data({'command': 'getNeighbors'})
        LOG.debug("getNeighbors result: %s" % str(result))
 
-       """ Simply test expect number of keys returned from data """
+       """ Simply test expected number of keys returned from data """
        self.assertEqual(len(result[0][0].keys()), 8)
 
     def test_get_node_info(self):
        result = iritop.fetch_data({'command': 'getNodeInfo'})
        LOG.debug("getNodeInfo result: %s" % str(result))
 
-       """ Simply test expect number of keys returned from data """
+       """ Simply test expected number of keys returned from data """
        self.assertEqual(len(result[0].keys()), 20)
 
     def test_bad_request(self):
@@ -158,6 +157,8 @@ class HTTPHandler(BaseHTTPRequestHandler):
         if 'command' not in data:
             self.do_response(response={"error": "missing command"}, code=400)
 
+        # Optionally increment data values here to
+        # help mimic real API port query over time
         if data['command'] == 'getNeighbors':
             code = 200
             response = [{
