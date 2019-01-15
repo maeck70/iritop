@@ -1,4 +1,3 @@
-from BaseHTTPServer import (BaseHTTPRequestHandler, HTTPServer)
 import socket
 import threading
 import unittest
@@ -7,7 +6,18 @@ import logging
 import json
 import sys
 from contextlib import (contextmanager, closing)
-from cStringIO import StringIO
+
+try:
+    from BaseHTTPServer import (BaseHTTPRequestHandler, HTTPServer)
+except ModuleNotFoundError:
+    from http.server import (BaseHTTPRequestHandler, HTTPServer)  # python 3
+
+try:
+    from cStringIO import StringIO
+except ModuleNotFoundError:
+    from io import StringIO  # python 3
+
+
 from os import path
 sys.path.append( path.dirname( path.dirname( path.abspath(__file__) ) ) )
 
