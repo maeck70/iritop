@@ -14,4 +14,4 @@ install:
   - pip install -r requirements.txt
 # command to run tests
 script:
-  - python iritop.py --test --node http://node21.heliumsushi.com:14265
+  - python iritop.py --test --node $NODE
