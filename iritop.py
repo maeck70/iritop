@@ -391,30 +391,30 @@ class IriTop:
                         if key not in self.baseline:
                             self.baseline[key] = 0
 
-                self.show(1, 0, "appName", node, "appName")
-                self.show(2, 0, "appVersion", node, "appVersion")
+                self.show(1, 0, "App Name", node, "appName")
+                self.show(2, 0, "App Version", node, "appVersion")
 
 
                 s = self.term.cyan("Free: ") + str(node["jreFreeMemory"]//MB) + " Mb  " + \
                     self.term.cyan("Max: ") + str(node["jreMaxMemory"]//MB) + " Mb " + \
                     self.term.cyan("Total: ") + str(node["jreTotalMemory"]//MB) + " Mb   "
-                self.show_string(1, 1, "jreMemory", s)
+                self.show_string(1, 1, "JRE Memory", s)
 
-                self.show_histogram(2, 1, "jreMemory",
+                self.show_histogram(2, 1, "JRE Memory",
                                     node["jreTotalMemory"] -
                                     node["jreFreeMemory"],
                                     node["jreMaxMemory"],
                                     0.8,
                                     span=2)
 
-                self.show(3, 2, "milestoneStart", node, "milestoneStartIndex")
-                self.show(4, 2, "milestoneIndex", node, "latestMilestoneIndex")
-                self.show(5, 2, "milestoneSolid", node,
+                self.show(3, 2, "Milestone Start", node, "milestoneStartIndex")
+                self.show(4, 2, "Milestone Index", node, "latestMilestoneIndex")
+                self.show(5, 2, "Milestone Solid", node,
                           "latestSolidSubtangleMilestoneIndex")
 
-                self.show(3, 0, "jreVersion", node, "jreVersion")
-                self.show(4, 1, "tips", node, "tips")
-                self.show(3, 1, "txToRequest", node, "transactionsToRequest")
+                self.show(3, 0, "JRE Version", node, "jreVersion")
+                self.show(4, 1, "Tips", node, "tips")
+                self.show(3, 1, "Tx To Request", node, "transactionsToRequest")
 
                 self.show_string(6, 0, "Node Address", self.showAddress(NODE))
 
@@ -429,7 +429,7 @@ class IriTop:
                                                    self.incommunicados)
                 else:
                     neighborCount += "    "
-                self.show_string(6, 2, "neighbors", neighborCount)
+                self.show_string(6, 2, "Neighbors", neighborCount)
 
                 if self.localhost:
                     self.show_string(5, 1, "Load Average", getloadavg())
