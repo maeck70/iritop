@@ -3,6 +3,7 @@ import threading
 import unittest
 import argparse
 import logging
+import time
 import json
 import sys
 from contextlib import (contextmanager, closing)
@@ -102,6 +103,9 @@ class TestArgParser(unittest.TestCase):
 
 class TestFetchData(unittest.TestCase):
 
+    # Note that setUp runs on each test method
+    # Could opt for a way to bring up the server
+    # for the entire duration of the class test
     def setUp(self):
         args = {
             'poll_delay': 1,
@@ -117,6 +121,12 @@ class TestFetchData(unittest.TestCase):
         """ Test HTTP server instance """
         self.server = testHTTPServer(bind_port=self.free_port, bind_address='127.0.0.1')
         self.start_server()
+        
+        LOG.debug("Wait for HTTP server")
+        while True:
+            if is_open('127.0.0.1', self.free_port) is True:
+                break
+            time.sleep(0.2)
 
         """ IRITop instance """
         self.iri_top = iritop.IriTop(Struct(**args))
@@ -148,6 +158,18 @@ class TestFetchData(unittest.TestCase):
 
 
 ### END TEST CASES """
+
+
+def is_open(ip, port):
+    # TODO: See how to supress warning 'ResourceWarning: unclosed <socket.socket...'
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        s.connect((ip, int(port)))
+        s.shutdown(2)
+        return True
+    except:
+        return False
+
 
 """ Handler for HTTP Server requests """
 class HTTPHandler(BaseHTTPRequestHandler):
