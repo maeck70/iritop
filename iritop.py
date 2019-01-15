@@ -117,6 +117,9 @@ def parse_args():
     parser.add_argument("-o", "--obscure-address", action='store_true',
                         help="Obscure addresses. Default: Off")
 
+    parser.add_argument("-q", "--test", action='store_true',
+                        help="Testing mode. Default: Off")
+
     # Get configuration file if exists
     home_dir = path.expanduser("~")
     if path.isfile(home_dir + '/.iritop'):
@@ -288,6 +291,7 @@ class IriTop:
         self.duration_hist = list()
         self.duration = 0
         self.duration_avg = 0
+        self.test = args.test
 
     @property
     def get_local_ips(self):
@@ -582,6 +586,9 @@ class IriTop:
                     "Press O to obscure addresses".ljust(width)))
 
         ITER += 1
+
+        if ITER >= 20 and self.test:
+            exit(0)
 
     def txString(self, neighbor, key, keydelta, keyshort, column_width):
         txcnt = neighbor[key] - (self.baseline[self.getBaselineKey(neighbor,
