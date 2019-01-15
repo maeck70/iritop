@@ -390,11 +390,11 @@ class IriTop:
                 self.show(1, 0, "appName", node, "appName")
                 self.show(2, 0, "appVersion", node, "appVersion")
 
-                self.show_string(1, 1, "jreMemory", "Free: %s Mb  Max: %s Mb "
-                                 " Total: %s Mb" %
-                                 (node["jreFreeMemory"]//MB,
-                                  node["jreMaxMemory"]//MB,
-                                  node["jreTotalMemory"]//MB))
+
+                s = self.term.cyan("Free: ") + str(node["jreFreeMemory"]//MB) + " Mb  " + \
+                    self.term.cyan("Max: ") + str(node["jreMaxMemory"]//MB) + " Mb " + \
+                    self.term.cyan("Total: ") + str(node["jreTotalMemory"]//MB) + " Mb   "
+                self.show_string(1, 1, "jreMemory", s)
 
                 self.show_histogram(2, 1, "jreMemory",
                                     node["jreTotalMemory"] -
@@ -416,8 +416,9 @@ class IriTop:
 
                 self.show_string(6, 0, "Baseline",
                                  self.baselineStr[self.baselineToggle])
-                self.show_string(6, 1, "Response Time", "%s ms Avg: %s ms" %
-                                 (self.duration, self.duration_avg))
+                self.show_string(6, 1, "Response Time", str(self.duration) + 
+                                       " ms " + self.term.cyan("Avg: ") + 
+                                       str(self.duration_avg) + " ms   ")
                 neighborCount = "%s" % node['neighbors']
                 if self.incommunicados > 0:
                     neighborCount += self.term.red(" / %d " %
