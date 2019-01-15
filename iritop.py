@@ -403,20 +403,20 @@ class IriTop:
                                     0.8,
                                     span=2)
 
-                self.show(3, 0, "milestoneStart", node, "milestoneStartIndex")
-                self.show(3, 1, "milestoneIndex", node, "latestMilestoneIndex")
-                self.show(3, 2, "milestoneSolid", node,
+                self.show(3, 2, "milestoneStart", node, "milestoneStartIndex")
+                self.show(4, 2, "milestoneIndex", node, "latestMilestoneIndex")
+                self.show(5, 2, "milestoneSolid", node,
                           "latestSolidSubtangleMilestoneIndex")
 
-                self.show(4, 0, "jreVersion", node, "jreVersion")
+                self.show(3, 0, "jreVersion", node, "jreVersion")
                 self.show(4, 1, "tips", node, "tips")
-                self.show(4, 2, "txToRequest", node, "transactionsToRequest")
+                self.show(3, 1, "txToRequest", node, "transactionsToRequest")
 
-                self.show_string(5, 0, "Node Address", self.showAddress(NODE))
+                self.show_string(6, 0, "Node Address", self.showAddress(NODE))
 
-                self.show_string(6, 0, "Baseline",
+                self.show_string(4, 0, "Baseline",
                                  self.baselineStr[self.baselineToggle])
-                self.show_string(6, 1, "Response Time", str(self.duration) + 
+                self.show_string(5, 0, "Response Time", str(self.duration) + 
                                        " ms " + self.term.cyan("Avg: ") + 
                                        str(self.duration_avg) + " ms   ")
                 neighborCount = "%s" % node['neighbors']
@@ -425,12 +425,12 @@ class IriTop:
                                                    self.incommunicados)
                 else:
                     neighborCount += "    "
-                self.show_string(5, 2, "neighbors", neighborCount)
+                self.show_string(6, 2, "neighbors", neighborCount)
 
                 if self.localhost:
-                    self.show_string(6, 2, "Load Average", getloadavg())
+                    self.show_string(5, 1, "Load Average", getloadavg())
                 else:
-                    self.show_string(6, 2, "Load Average", 'N/A')
+                    self.show_string(5, 1, "Load Average", 'N/A')
 
                 self.show_neighbors(7, neighbors)
 
