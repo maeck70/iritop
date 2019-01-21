@@ -304,7 +304,7 @@ class IriTop:
         self.duration_avg = 0
         self.sortmode = False
         self.sortcolumn = None
-        self.sortorderlist = ["", u"\u2191", u"\u2193"]
+        self.sortorderlist = ["", " "+u"\u25B2", " "+u"\u25BC"]
         self.sortorder = None
 
     @property
