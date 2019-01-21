@@ -8,14 +8,15 @@ import json
 import sys
 from contextlib import (contextmanager, closing)
 
+
 try:
     from BaseHTTPServer import (BaseHTTPRequestHandler, HTTPServer)
-except ModuleNotFoundError:
+except ImportError:
     from http.server import (BaseHTTPRequestHandler, HTTPServer)  # python 3
 
 try:
     from cStringIO import StringIO
-except ModuleNotFoundError:
+except ImportError:
     from io import StringIO  # python 3
 
 
