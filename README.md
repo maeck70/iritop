@@ -27,6 +27,7 @@ pip install -r requirements.txt
 - Use 'Q' to exit from the tool.
 - Use 'B' to toggle into baseline mode (baseline mode zeroes all transactions and shows increment from baseline mode start).
 - Use 'O' to obscure addresses (Helpful if you desire to post a screenshot of the IRI node status).
+- Use 'S' to go into sort column mode. As soon Sort column mode is activated the headers will show a number that corresponds with a specific column. Press that number key to activate sorting. Initiating sorting on the same column again reverses the sort order.  
 
 ## Arguments
 
