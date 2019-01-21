@@ -1,7 +1,6 @@
 import socket
 import threading
 import unittest
-import argparse
 import logging
 import time
 import json
@@ -21,7 +20,7 @@ except ImportError:
 
 
 from os import path
-sys.path.append( path.dirname( path.dirname( path.abspath(__file__) ) ) )
+sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
 import iritop
 
@@ -29,9 +28,11 @@ import iritop
 LOG = logging.getLogger(__name__)
 
 
-### START TEST CASES ###
+# START TEST CASES
+
+
 class TestArgParser(unittest.TestCase):
- 
+
     def setUp(self):
         self.args = None
 
@@ -51,7 +52,7 @@ class TestArgParser(unittest.TestCase):
 
         # Parse arguments
         self.parse_args()
- 
+
     def test_valid_node_url(self):
         """
         Test valid node URLs
@@ -79,7 +80,7 @@ class TestArgParser(unittest.TestCase):
             'http://14*929=.com'
         ]
 
-        for node in invalid_node_urls:        
+        for node in invalid_node_urls:
             with self.assertRaises(SystemExit):
                 LOG.debug("Testing invalid URL: '%s'" % node)
                 self.set_new_args(['--node=' + node])
@@ -93,7 +94,7 @@ class TestArgParser(unittest.TestCase):
                 self.set_new_args(['--version'])
                 output = out.getvalue().strip()
                 self.assertEqual(output, 'iritop ' + iritop.__VERSION__)
- 
+
     def test_config_file_not_found(self):
         """
         Test file not found error
@@ -120,9 +121,10 @@ class TestFetchData(unittest.TestCase):
         iritop.NODE = 'http://127.0.0.1:%d' % self.free_port
 
         """ Test HTTP server instance """
-        self.server = testHTTPServer(bind_port=self.free_port, bind_address='127.0.0.1')
+        self.server = testHTTPServer(bind_port=self.free_port,
+                                     bind_address='127.0.0.1')
         self.start_server()
-        
+
         LOG.debug("Wait for HTTP server")
         while True:
             if is_open('127.0.0.1', self.free_port) is True:
@@ -133,24 +135,25 @@ class TestFetchData(unittest.TestCase):
         self.iri_top = iritop.IriTop(Struct(**args))
 
     def start_server(self):
-        self.server_thread = threading.Thread(target=self.server.serve_until_shutdown)
+        self.server_thread = threading.Thread(
+            target=self.server.serve_until_shutdown)
         self.server_thread.daemon = True
         self.server_thread.start()
         LOG.debug("Started test HTTP server at port %d" % self.free_port)
 
     def test_get_neighbors(self):
-       result = iritop.fetch_data({'command': 'getNeighbors'})
-       LOG.debug("getNeighbors result: %s" % str(result))
+        result = iritop.fetch_data({'command': 'getNeighbors'})
+        LOG.debug("getNeighbors result: %s" % str(result))
 
-       """ Simply test expected number of keys returned from data """
-       self.assertEqual(len(result[0][0].keys()), 8)
+        """ Simply test expected number of keys returned from data """
+        self.assertEqual(len(result[0][0].keys()), 8)
 
     def test_get_node_info(self):
-       result = iritop.fetch_data({'command': 'getNodeInfo'})
-       LOG.debug("getNodeInfo result: %s" % str(result))
+        result = iritop.fetch_data({'command': 'getNodeInfo'})
+        LOG.debug("getNodeInfo result: %s" % str(result))
 
-       """ Simply test expected number of keys returned from data """
-       self.assertEqual(len(result[0].keys()), 20)
+        """ Simply test expected number of keys returned from data """
+        self.assertEqual(len(result[0].keys()), 20)
 
     def test_bad_request(self):
         """ Test bad request """
@@ -158,11 +161,12 @@ class TestFetchData(unittest.TestCase):
             result = iritop.fetch_data({'command': 'invalid'})
 
 
-### END TEST CASES """
+# END TEST CASES
 
 
 def is_open(ip, port):
-    # TODO: See how to supress warning 'ResourceWarning: unclosed <socket.socket...'
+    # TODO: See how to supress warning
+    # 'ResourceWarning: unclosed <socket.socket...'
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         s.connect((ip, int(port)))
@@ -173,6 +177,8 @@ def is_open(ip, port):
 
 
 """ Handler for HTTP Server requests """
+
+
 class HTTPHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
@@ -203,8 +209,7 @@ class HTTPHandler(BaseHTTPRequestHandler):
                 "numberOfRandomTransactionRequests": 1097,
                 "numberOfSentTransactions": 110276,
                 "numberOfStaleTransactions": 3413
-            },
-            {
+            }, {
                 "address": "node03.testserver.nl:15700",
                 "connectionType": "tcp",
                 "numberOfAllTransactions": 122298,
@@ -248,7 +253,7 @@ class HTTPHandler(BaseHTTPRequestHandler):
             code = 400
 
         self.do_response(code=code, response=response)
-        
+
     def do_response(self, response=None, code=200):
         self._set_headers(code)
         self.wfile.write(json.dumps(response).encode())
@@ -260,6 +265,8 @@ class HTTPHandler(BaseHTTPRequestHandler):
 
 
 """ HTTP test server """
+
+
 class testHTTPServer():
 
     def __init__(self, bind_address, bind_port):
@@ -296,6 +303,7 @@ class Struct:
 
 
 if __name__ == '__main__':
-    logging.basicConfig(stream=sys.stderr, format='[%(levelname)s] %(message)s')
+    logging.basicConfig(stream=sys.stderr,
+                        format='[%(levelname)s] %(message)s')
     logging.getLogger(__name__).setLevel(logging.DEBUG)
     unittest.main()

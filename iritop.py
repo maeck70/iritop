@@ -390,10 +390,14 @@ class IriTop:
                 self.show(1, 0, "App Name", node, "appName")
                 self.show(2, 0, "App Version", node, "appVersion")
 
-
-                s = self.term.cyan("Free: ") + str(node["jreFreeMemory"]//MB) + " Mb  " + \
-                    self.term.cyan("Max: ") + str(node["jreMaxMemory"]//MB) + " Mb " + \
-                    self.term.cyan("Total: ") + str(node["jreTotalMemory"]//MB) + " Mb   "
+                s = self.term.cyan("Free: ") + \
+                    str(node["jreFreeMemory"]//MB) + \
+                    " Mb  " + \
+                    self.term.cyan("Max: ") + \
+                    str(node["jreMaxMemory"]//MB) + \
+                    " Mb " + \
+                    self.term.cyan("Total: ") + \
+                    str(node["jreTotalMemory"]//MB) + " Mb   "
                 self.show_string(1, 1, "JRE Memory", s)
 
                 self.show_histogram(2, 1, "JRE Memory",
@@ -403,21 +407,24 @@ class IriTop:
                                     0.8,
                                     span=2)
 
-                self.show(3, 2, "Milestone Start", node, "milestoneStartIndex")
-                self.show(4, 2, "Milestone Index", node, "latestMilestoneIndex")
+                self.show(3, 2, "Milestone Start", node,
+                          "milestoneStartIndex")
+                self.show(4, 2, "Milestone Index", node,
+                          "latestMilestoneIndex")
                 self.show(5, 2, "Milestone Solid", node,
                           "latestSolidSubtangleMilestoneIndex")
 
                 self.show(3, 0, "JRE Version", node, "jreVersion")
                 self.show(4, 1, "Tips", node, "tips")
-                self.show(3, 1, "Tx To Request", node, "transactionsToRequest")
+                self.show(3, 1, "Tx To Request", node,
+                          "transactionsToRequest")
 
                 self.show_string(6, 0, "Node Address", self.showAddress(NODE))
 
                 self.show_string(4, 0, "Baseline",
                                  self.baselineStr[self.baselineToggle])
-                self.show_string(5, 0, "Response Time", str(self.duration) + 
-                                       " ms " + self.term.cyan("Avg: ") + 
+                self.show_string(5, 0, "Response Time", str(self.duration) +
+                                       " ms " + self.term.cyan("Avg: ") +
                                        str(self.duration_avg) + " ms   ")
                 neighborCount = "%s" % node['neighbors']
                 if self.incommunicados > 0:
@@ -620,7 +627,7 @@ class IriTop:
         ncolw = 3 * (column_width + 1)
         if len(neighbor['addr']) < ncolw:
             # pad
-            neighbor['addr'] = neighbor['addr'].ljust(ncolw ,' ')
+            neighbor['addr'] = neighbor['addr'].ljust(ncolw, ' ')
         elif len(neighbor['addr']) > ncolw:
             # trim
             neighbor['addr'] = neighbor['addr'][0:ncolw]
@@ -646,12 +653,9 @@ class IriTop:
 
         # do not display any neighbors crossing the height of the terminal
         if row < height - 2:
-            if incommunicado:
-                print(self.term.move(row, column_start_list[0]) +
-                      self.term.red(neighbor['addr']))
-            else:
-                print(self.term.move(row, column_start_list[0]) +
-                      self.term.white(neighbor['addr']))
+            print(self.term.move(row, column_start_list[0]) +
+                  (self.term.white(neighbor['addr']) if not incommunicado
+                  else self.term.red(neighbor['addr'])))
             for txkey in self.txkeys:
                 print(self.term.move(row, column_start_list[txkey['col']]) +
                       self.term.green(neighbor[txkey['keyshort']]))
