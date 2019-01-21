@@ -13,7 +13,7 @@ from os import (path, environ, getloadavg)
 from curses import wrapper
 
 
-__VERSION__ = '0.4.5'
+__VERSION__ = '0.4.6'
 
 """\
 Simple Iota IRI Node Monitor
@@ -116,9 +116,6 @@ def parse_args():
 
     parser.add_argument("-o", "--obscure-address", action='store_true',
                         help="Obscure addresses. Default: Off")
-
-    parser.add_argument("-q", "--test", action='store_true',
-                        help="Testing mode. Default: Off")
 
     # Get configuration file if exists
     home_dir = path.expanduser("~")
@@ -291,7 +288,6 @@ class IriTop:
         self.duration_hist = list()
         self.duration = 0
         self.duration_avg = 0
-        self.test = args.test
 
     @property
     def get_local_ips(self):
@@ -579,6 +575,10 @@ class IriTop:
             self.show_neighbor(row, neighbor, cwl, cw, height)
             row += 1
 
+        # Blank spare neighbor rows
+        for blankrow in range(row, height - 2):
+            print(self.term.move(blankrow, 0) + " " * width)
+
         print(self.term.move(height - 2, 0 * cw) +
               self.term.black_on_cyan(
                     "Press Q to exit - "
@@ -586,9 +586,6 @@ class IriTop:
                     "Press O to obscure addresses".ljust(width)))
 
         ITER += 1
-
-        if ITER >= 20 and self.test:
-            exit(0)
 
     def txString(self, neighbor, key, keydelta, keyshort, column_width):
         txcnt = neighbor[key] - (self.baseline[self.getBaselineKey(neighbor,
@@ -611,11 +608,22 @@ class IriTop:
                                   txkey['keyshort'],
                                   column_width)
 
-        # Highlight neighbors that are incommunicade
+        # Highlight neighbors that are incommunicado
+        incommunicado = False
         if (neighbor['numberOfAllTransactionsDelta'] == 0 and
                 ITER > (6 * self.poll_delay)):
-            neighbor['addr'] = self.term.red("(!) " + neighbor['addr'])
+            neighbor['addr'] = "(!) " + neighbor['addr']
+            incommunicado = True
             self.incommunicados += 1
+
+        # Pad/Trim neighbor address
+        ncolw = 3 * (column_width + 1)
+        if len(neighbor['addr']) < ncolw:
+            # pad
+            neighbor['addr'] = neighbor['addr'].ljust(ncolw ,' ')
+        elif len(neighbor['addr']) > ncolw:
+            # trim
+            neighbor['addr'] = neighbor['addr'][0:ncolw]
 
         value_at = "neighbor-%s-at" % neighbor['address']
         if (value_at in self.prev and
@@ -638,8 +646,12 @@ class IriTop:
 
         # do not display any neighbors crossing the height of the terminal
         if row < height - 2:
-            print(self.term.move(row, column_start_list[0]) +
-                  self.term.white(neighbor['addr'] + "    "))
+            if incommunicado:
+                print(self.term.move(row, column_start_list[0]) +
+                      self.term.red(neighbor['addr']))
+            else:
+                print(self.term.move(row, column_start_list[0]) +
+                      self.term.white(neighbor['addr']))
             for txkey in self.txkeys:
                 print(self.term.move(row, column_start_list[txkey['col']]) +
                       self.term.green(neighbor[txkey['keyshort']]))
