@@ -358,13 +358,11 @@ class IriTop:
                                         self.sortorder = self.sortorderlist[1]
                                     else:
                                         self.sortorder = self.sortorderlist[2]
+                                else:
+                                    self.sortorder = self.sortorderlist[1]
                                 # Set sort column
                                 self.sortcolumn = k['sortcolumn']
                                 self.sortmode = False
-
-                    # elif key != "":
-                    #     self.sortcolumn = None
-                    #     self.sortmode = False
 
                 self.oldheight, self.oldwidth = self.height, self.width
                 self.height, self.width = self.term.height, self.term.width
