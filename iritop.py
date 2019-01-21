@@ -260,20 +260,34 @@ class IriTop:
         self.blink_delay = args.blink_delay
         self.commands = [{'command': 'getNeighbors'},
                          {'command': 'getNodeInfo'}]
-        self.txkeys = [{'keyshort': 'ad', 'sortkey': '1', 'header': 'Neighbor Address',
-                        'key': 'neighborAddress', 'col': 0, 'sortcolumn': 'address'},
-                       {'keyshort': 'at', 'sortkey': '2', 'header': 'All tx',
-                        'key': 'numberOfAllTransactions', 'col': 3, 'sortcolumn': 'numberOfAllTransactions'},
-                       {'keyshort': 'nt', 'sortkey': '3', 'header': 'New tx',
-                        'key': 'numberOfNewTransactions', 'col': 4, 'sortcolumn': 'numberOfNewTransactions'},
-                       {'keyshort': 'st', 'sortkey': '4', 'header': 'Sent tx',
-                        'key': 'numberOfSentTransactions', 'col': 5, 'sortcolumn': 'numberOfSentTransactions'},
-                       {'keyshort': 'rt', 'sortkey': '5', 'header': 'Random tx',
-                        'key': 'numberOfRandomTransactionRequests', 'col': 6, 'sortcolumn': 'numberOfRandomTransactionRequests'},
-                       {'keyshort': 'it', 'sortkey': '6', 'header': 'Invalid tx',
-                        'key': 'numberOfInvalidTransactions', 'col': 7, 'sortcolumn': 'numberOfInvalidTransactions'},
-                       {'keyshort': 'xt', 'sortkey': '7', 'header': 'Stale tx',
-                        'key': 'numberOfStaleTransactions', 'col': 8, 'sortcolumn': 'numberOfStaleTransactions'}]
+        self.txkeys = [{'keyshort': 'ad', 'sortkey': '1',
+                        'header': 'Neighbor Address',
+                        'key': 'neighborAddress', 'col': 0,
+                        'sortcolumn': 'address'},
+                       {'keyshort': 'at', 'sortkey': '2',
+                       'header': 'All tx',
+                        'key': 'numberOfAllTransactions', 'col': 3,
+                        'sortcolumn': 'numberOfAllTransactions'},
+                       {'keyshort': 'nt', 'sortkey': '3',
+                       'header': 'New tx',
+                        'key': 'numberOfNewTransactions', 'col': 4,
+                        'sortcolumn': 'numberOfNewTransactions'},
+                       {'keyshort': 'st', 'sortkey': '4',
+                       'header': 'Sent tx',
+                        'key': 'numberOfSentTransactions', 'col': 5,
+                        'sortcolumn': 'numberOfSentTransactions'},
+                       {'keyshort': 'rt', 'sortkey': '5',
+                       'header': 'Random tx',
+                        'key': 'numberOfRandomTransactionRequests', 'col': 6,
+                        'sortcolumn': 'numberOfRandomTransactionRequests'},
+                       {'keyshort': 'it', 'sortkey': '6',
+                       'header': 'Invalid tx',
+                        'key': 'numberOfInvalidTransactions', 'col': 7,
+                        'sortcolumn': 'numberOfInvalidTransactions'},
+                       {'keyshort': 'xt', 'sortkey': '7',
+                       'header': 'Stale tx',
+                        'key': 'numberOfStaleTransactions', 'col': 8,
+                        'sortcolumn': 'numberOfStaleTransactions'}]
         self.randSeed = random.randint(0, 100000)
         self.baseline = dict()
         self.baselineStr = ['Off', 'On']
@@ -291,8 +305,7 @@ class IriTop:
         self.sortmode = False
         self.sortcolumn = None
         self.sortorderlist = ["", u"\u2191", u"\u2193"]
-        self.sortorder = None 
-
+        self.sortorder = None
 
     @property
     def get_local_ips(self):
@@ -325,12 +338,12 @@ class IriTop:
 
                 # Sort mode detection
                 if val.lower() == 's':
-                    if self.sortmode == False:
+                    if self.sortmode is False:
                         self.sortmode = True
                     else:
                         self.sortmode = False
                 if self.sortmode:
-                    if self.sortorder == None:
+                    if self.sortorder is None:
                         self.sortorder = self.sortorderlist[1]
                     keylist = []
                     for k in self.txkeys:
@@ -341,7 +354,7 @@ class IriTop:
                             if key == k['sortkey']:
                                 # Toggle sort direction
                                 if self.sortcolumn == k['sortcolumn']:
-                                    if self.sortorder == self.sortorderlist[2]: 
+                                    if self.sortorder == self.sortorderlist[2]:
                                         self.sortorder = self.sortorderlist[1]
                                     else:
                                         self.sortorder = self.sortorderlist[2]
@@ -521,7 +534,8 @@ class IriTop:
         if value == "neighbors" and dictionary[value] == 0:
             vs = self.term.red(str(dictionary[value]))
 
-        # Highlight if latest milestone is out of sync with the solid milestone
+        # Highlight if latest milestone is out of sync with
+        # the solid milestone
         if value == "latestSolidSubtangleMilestoneIndex":
             diff = dictionary["latestSolidSubtangleMilestoneIndex"] - \
               dictionary["latestMilestoneIndex"]
@@ -596,11 +610,14 @@ class IriTop:
             cwl.append(cw1 + (c * cw))
 
         self.incommunicados = 0
-        revso = True if self.sortorder == self.sortorderlist[2] else False  
+        revso = True if self.sortorder == self.sortorderlist[2] else False
 
         for k in self.txkeys:
             ch = k['header'] + (' [%s]' % k['sortkey'] if self.sortmode
-                else (self.sortorderlist[1] if revso else self.sortorderlist[2]) if self.sortcolumn == k['sortcolumn'] else '')
+                                else (self.sortorderlist[1] if revso
+                                      else self.sortorderlist[2])
+                                if self.sortcolumn == k['sortcolumn']
+                                else '')
             ch += "" if k['keyshort'] != 'ad' else " "*(cw*4-len(ch))
             print(self.term.move(row, cwl[k['col']]) +
                   self.term.black_on_green(ch.rjust(cw)))
@@ -609,14 +626,15 @@ class IriTop:
 
         # Sort neighbors
         ordered_neighbors = []
-        if self.sortcolumn == None:
+        if self.sortcolumn is None:
             self.sortorder = None
-            for neighbor in neighbors:
-                ordered_neighbors.append(neighbor)
+            ordered_neighbors = neighbors
         else:
-            if self.sortorder == None:
+            if self.sortorder is None:
                 self.sortorder = self.sortorderlist[0]
-            ordered_neighbors = sorted(neighbors, key=lambda k: k[self.sortcolumn], reverse = revso) 
+            ordered_neighbors = sorted(neighbors,
+                                       key=lambda k: k[self.sortcolumn],
+                                       reverse=revso)
 
         # Show Neighbors
         for neighbor in ordered_neighbors:
