@@ -13,7 +13,7 @@ from os import (path, environ, getloadavg)
 from curses import wrapper
 
 
-__VERSION__ = '0.4.6'
+__VERSION__ = '0.5.0'
 
 """\
 Simple Iota IRI Node Monitor
@@ -60,8 +60,6 @@ NODE = "http://localhost:14265"
 HEADERS = {'Content-Type': 'application/json',
            'Accept-Charset': 'UTF-8',
            'X-IOTA-API-Version': '1',
-           # 'USERNAME': 'iota',
-           # 'PASSWORD': 'secret8080coin',
            }
 
 USERNAME = ""
@@ -262,18 +260,20 @@ class IriTop:
         self.blink_delay = args.blink_delay
         self.commands = [{'command': 'getNeighbors'},
                          {'command': 'getNodeInfo'}]
-        self.txkeys = [{'keyshort': 'at',
-                        'key': 'numberOfAllTransactions', 'col': 3},
-                       {'keyshort': 'nt',
-                        'key': 'numberOfNewTransactions', 'col': 4},
-                       {'keyshort': 'st',
-                        'key': 'numberOfSentTransactions', 'col': 5},
-                       {'keyshort': 'rt',
-                        'key': 'numberOfRandomTransactionRequests', 'col': 6},
-                       {'keyshort': 'it',
-                        'key': 'numberOfInvalidTransactions', 'col': 7},
-                       {'keyshort': 'xt',
-                        'key': 'numberOfStaleTransactions', 'col': 8}, ]
+        self.txkeys = [{'keyshort': 'ad', 'sortkey': '1', 'header': 'Neighbor Address',
+                        'key': 'neighborAddress', 'col': 0, 'sortcolumn': 'address'},
+                       {'keyshort': 'at', 'sortkey': '2', 'header': 'All tx',
+                        'key': 'numberOfAllTransactions', 'col': 3, 'sortcolumn': 'numberOfAllTransactions'},
+                       {'keyshort': 'nt', 'sortkey': '3', 'header': 'New tx',
+                        'key': 'numberOfNewTransactions', 'col': 4, 'sortcolumn': 'numberOfNewTransactions'},
+                       {'keyshort': 'st', 'sortkey': '4', 'header': 'Sent tx',
+                        'key': 'numberOfSentTransactions', 'col': 5, 'sortcolumn': 'numberOfSentTransactions'},
+                       {'keyshort': 'rt', 'sortkey': '5', 'header': 'Random tx',
+                        'key': 'numberOfRandomTransactionRequests', 'col': 6, 'sortcolumn': 'numberOfRandomTransactionRequests'},
+                       {'keyshort': 'it', 'sortkey': '6', 'header': 'Invalid tx',
+                        'key': 'numberOfInvalidTransactions', 'col': 7, 'sortcolumn': 'numberOfInvalidTransactions'},
+                       {'keyshort': 'xt', 'sortkey': '7', 'header': 'Stale tx',
+                        'key': 'numberOfStaleTransactions', 'col': 8, 'sortcolumn': 'numberOfStaleTransactions'}]
         self.randSeed = random.randint(0, 100000)
         self.baseline = dict()
         self.baselineStr = ['Off', 'On']
@@ -288,6 +288,11 @@ class IriTop:
         self.duration_hist = list()
         self.duration = 0
         self.duration_avg = 0
+        self.sortmode = False
+        self.sortcolumn = None
+        self.sortorderlist = ["", u"\u2191", u"\u2193"]
+        self.sortorder = None 
+
 
     @property
     def get_local_ips(self):
@@ -318,6 +323,36 @@ class IriTop:
 
                 val = self.term.inkey(timeout=self.blink_delay)
 
+                # Sort mode detection
+                if val.lower() == 's':
+                    if self.sortmode == False:
+                        self.sortmode = True
+                    else:
+                        self.sortmode = False
+                if self.sortmode:
+                    if self.sortorder == None:
+                        self.sortorder = self.sortorderlist[1]
+                    keylist = []
+                    for k in self.txkeys:
+                        keylist.append(k['sortkey'])
+                    key = val.lower()
+                    if key in keylist:
+                        for k in self.txkeys:
+                            if key == k['sortkey']:
+                                # Toggle sort direction
+                                if self.sortcolumn == k['sortcolumn']:
+                                    if self.sortorder == self.sortorderlist[2]: 
+                                        self.sortorder = self.sortorderlist[1]
+                                    else:
+                                        self.sortorder = self.sortorderlist[2]
+                                # Set sort column
+                                self.sortcolumn = k['sortcolumn']
+                                self.sortmode = False
+
+                    # elif key != "":
+                    #     self.sortcolumn = None
+                    #     self.sortmode = False
+
                 self.oldheight, self.oldwidth = self.height, self.width
                 self.height, self.width = self.term.height, self.term.width
 
@@ -346,7 +381,7 @@ class IriTop:
                     tlast = int(time.time())
 
                     for neighbor in neighbors:
-                        for txkey in self.txkeys:
+                        for txkey in self.txkeys[1:]:
                             if txkey['key'] not in neighbor:
                                 neighbor[txkey['key']] = 0
                                 neighbor[txkey['keyshort']] = 0
@@ -355,7 +390,7 @@ class IriTop:
                     # Keep history of tx
                     tx_history = {}
                     for neighbor in neighbors:
-                        for txkey in self.txkeys:
+                        for txkey in self.txkeys[1:]:
                             self.historizer(txkey['keyshort'],
                                             txkey['key'],
                                             tx_history,
@@ -367,7 +402,7 @@ class IriTop:
 
                 if val.lower() == 'b':
                     for neighbor in neighbors:
-                        for txkey in self.txkeys:
+                        for txkey in self.txkeys[1:]:
                             self.baseline[self.getBaselineKey(neighbor,
                                           txkey['keyshort'])] = \
                                           neighbor[txkey['key']]
@@ -382,7 +417,7 @@ class IriTop:
                       .ljust(self.width) % __VERSION__))
 
                 for neighbor in neighbors:
-                    for txkey in self.txkeys:
+                    for txkey in self.txkeys[1:]:
                         key = self.getBaselineKey(neighbor, txkey['keyshort'])
                         if key not in self.baseline:
                             self.baseline[key] = 0
@@ -561,24 +596,30 @@ class IriTop:
             cwl.append(cw1 + (c * cw))
 
         self.incommunicados = 0
+        revso = True if self.sortorder == self.sortorderlist[2] else False  
 
-        print(self.term.move(row, cwl[0]) +
-              self.term.black_on_green("Neighbor Address".ljust(cw*4)))
-        print(self.term.move(row, cwl[3]) +
-              self.term.black_on_green("All tx".rjust(cw)))
-        print(self.term.move(row, cwl[4]) +
-              self.term.black_on_green("New tx".rjust(cw)))
-        print(self.term.move(row, cwl[5]) +
-              self.term.black_on_green("Sent tx".rjust(cw)))
-        print(self.term.move(row, cwl[6]) +
-              self.term.black_on_green("Random tx".rjust(cw)))
-        print(self.term.move(row, cwl[7]) +
-              self.term.black_on_green("Invalid tx".rjust(cw)))
-        print(self.term.move(row, cwl[8]) +
-              self.term.black_on_green("Stale tx".rjust(cw)))
+        for k in self.txkeys:
+            ch = k['header'] + (' [%s]' % k['sortkey'] if self.sortmode
+                else (self.sortorderlist[1] if revso else self.sortorderlist[2]) if self.sortcolumn == k['sortcolumn'] else '')
+            ch += "" if k['keyshort'] != 'ad' else " "*(cw*4-len(ch))
+            print(self.term.move(row, cwl[k['col']]) +
+                  self.term.black_on_green(ch.rjust(cw)))
 
         row += 1
-        for neighbor in neighbors:
+
+        # Sort neighbors
+        ordered_neighbors = []
+        if self.sortcolumn == None:
+            self.sortorder = None
+            for neighbor in neighbors:
+                ordered_neighbors.append(neighbor)
+        else:
+            if self.sortorder == None:
+                self.sortorder = self.sortorderlist[0]
+            ordered_neighbors = sorted(neighbors, key=lambda k: k[self.sortcolumn], reverse = revso) 
+
+        # Show Neighbors
+        for neighbor in ordered_neighbors:
             self.show_neighbor(row, neighbor, cwl, cw, height)
             row += 1
 
@@ -588,9 +629,10 @@ class IriTop:
 
         print(self.term.move(height - 2, 0 * cw) +
               self.term.black_on_cyan(
-                    "Press Q to exit - "
-                    "Press B to reset tx to a zero baseline -"
-                    "Press O to obscure addresses".ljust(width)))
+                    "Q to exit - "
+                    "B to reset tx to a zero baseline - "
+                    "O to obscure addresses - "
+                    "S# to sort column".ljust(width)))
 
         ITER += 1
 
@@ -607,7 +649,7 @@ class IriTop:
                                             "://" + neighbor['address'])
 
         # Create display string
-        for txkey in self.txkeys:
+        for txkey in self.txkeys[1:]:
             neighbor[txkey['keyshort']] = \
                     self.txString(neighbor,
                                   txkey['key'],
@@ -643,7 +685,7 @@ class IriTop:
                               .rjust(column_width))
 
         # Blink changed value
-        for txkey in self.txkeys:
+        for txkey in self.txkeys[1:]:
             neighborkey = "neighbor-%s-%s" % (neighbor['address'],
                                               txkey['keyshort'])
             if (neighborkey in self.prev and
@@ -656,12 +698,12 @@ class IriTop:
             print(self.term.move(row, column_start_list[0]) +
                   (self.term.white(neighbor['addr']) if not incommunicado
                   else self.term.red(neighbor['addr'])))
-            for txkey in self.txkeys:
+            for txkey in self.txkeys[1:]:
                 print(self.term.move(row, column_start_list[txkey['col']]) +
                       self.term.green(neighbor[txkey['keyshort']]))
 
         # Store previous value
-        for txkey in self.txkeys:
+        for txkey in self.txkeys[1:]:
             neighborkey = "neighbor-%s-%s" % (neighbor['address'],
                                               txkey['keyshort'])
             self.prev[neighborkey] = neighbor[txkey['key']]
