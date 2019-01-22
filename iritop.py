@@ -13,7 +13,7 @@ from os import (path, environ, getloadavg)
 from curses import wrapper
 
 
-__VERSION__ = '0.5.0'
+__VERSION__ = '0.5.1'
 
 """\
 Simple Iota IRI Node Monitor
@@ -306,6 +306,8 @@ class IriTop:
         self.sortcolumn = None
         self.sortorderlist = ["", " "+u"\u25B2", " "+u"\u25BC"]
         self.sortorder = None
+        self.mss_0 = ""
+        self.prev_ms_start = 0
 
     @property
     def get_local_ips(self):
@@ -322,6 +324,7 @@ class IriTop:
     def run(self, stdscr):
 
         stdscr.clear()
+        node = None
 
         print("IRITop connecting to node %s..." % NODE)
 
@@ -368,6 +371,9 @@ class IriTop:
                 self.height, self.width = self.term.height, self.term.width
 
                 if int(time.time()) - tlast > self.poll_delay:
+
+                    if node:
+                        self.prev_ms_start = node["milestoneStartIndex"]
 
                     startTime = int(round(time.time() * 1000))
                     results = [fetch_data(self.commands[i]) for i
@@ -453,8 +459,13 @@ class IriTop:
                                     0.8,
                                     span=2)
 
-                self.show(3, 2, "Milestone Start", node,
-                          "milestoneStartIndex")
+                ms_start = node["milestoneStartIndex"]
+                delta_ms_start = self.prev_ms_start - ms_start
+                self.mss_1 = self.mss_0 
+                self.mss_0 = ("%s" % ms_start) + ("" if delta_ms_start == 0 else " (%d)" % delta_ms_start)
+                self.show_string(3, 2, "", " "*16)
+                self.show_string(3, 2, "Milestone Start", self.mss_0, prev = self.mss_1)
+
                 self.show(4, 2, "Milestone Index", node,
                           "latestMilestoneIndex")
                 self.show(5, 2, "Milestone Solid", node,
@@ -553,14 +564,19 @@ class IriTop:
 
         self.prev[value] = dictionary[value]
 
-    def show_string(self, row, col, label, value):
+    def show_string(self, row, col, label, value, prev = ""):
 
         x1 = (self.width // 3) * col
         x2 = x1 + 18
 
+        value = str(value)
+        if prev != "" and value != prev:
+            value = self.term.on_blue(value)
+
         print(self.term.move(row, x1) + self.term.cyan(label + ":"))
         print(self.term.move(row, x2) +
               self.term.bright_cyan(str(value) + "  "))
+
 
     def show_histogram(self, row, col, label, value, value_max,
                        warning_limit=0.8, span=1):
