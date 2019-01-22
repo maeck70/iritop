@@ -304,7 +304,7 @@ class IriTop:
         self.duration_avg = 0
         self.sortmode = False
         self.sortcolumn = None
-        self.sortorderlist = ["", " "+u"\u25B2", " "+u"\u25BC"]
+        self.sortorderlist = ["", " "+u"\u25BC", " "+u"\u25B2"]
         self.sortorder = None
         self.mss_0 = ""
         self.prev_ms_start = 0
@@ -347,7 +347,7 @@ class IriTop:
                         self.sortmode = False
                 if self.sortmode:
                     if self.sortorder is None:
-                        self.sortorder = self.sortorderlist[1]
+                        self.sortorder = self.sortorderlist[2]
                     keylist = []
                     for k in self.txkeys:
                         keylist.append(k['sortkey'])
@@ -362,7 +362,7 @@ class IriTop:
                                     else:
                                         self.sortorder = self.sortorderlist[2]
                                 else:
-                                    self.sortorder = self.sortorderlist[1]
+                                    self.sortorder = self.sortorderlist[2]
                                 # Set sort column
                                 self.sortcolumn = k['sortcolumn']
                                 self.sortmode = False
