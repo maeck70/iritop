@@ -105,7 +105,7 @@ class TestArgParser(unittest.TestCase):
 
     def test_password_and_username(self):
         """
-        Test username set but not password
+        Test username set but not password and vice-versa
         """
         with self.assertRaises(SystemExit):
             LOG.debug("Testing only username passed")
@@ -190,7 +190,7 @@ def is_open(ip, port):
     except:
         return False
 
-
+""" Check authentication wrapper """
 def check_auth(func):
     @wraps(func)
     def wrapped(inst, *args, **kw):
