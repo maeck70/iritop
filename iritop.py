@@ -13,7 +13,7 @@ from os import (path, environ, getloadavg)
 from curses import wrapper
 
 
-__VERSION__ = '0.5.1'
+__VERSION__ = '0.5.2'
 
 """\
 Simple Iota IRI Node Monitor
@@ -69,6 +69,7 @@ POLL_DELAY = 2
 OBSCURE_TOGGLE = 0
 ITER = 0
 MB = 1024 * 1024
+EXIT_MSG = ""
 
 
 def parse_args():
@@ -385,11 +386,8 @@ class IriTop:
                     node = None
                     for data, e in results:
                         if e is not None:
-                            sys.stderr.write("Error fetching data from node:"
-                                             " %s\n" % e)
-                            time.sleep(2)
-                            sys.exit(1)
-
+                            raise Exception("Error fetching data from node:"
+                                            " %s\n" % e)
                         if 'appName' in data.keys():
                             node = data
                         elif 'neighbors' in data.keys():
