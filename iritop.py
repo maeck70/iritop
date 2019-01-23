@@ -8,6 +8,7 @@ import time
 import json
 import yaml
 import random
+import base64
 from subprocess import check_output
 from os import (path, environ, getloadavg)
 from curses import wrapper
@@ -59,7 +60,7 @@ NODE = "http://localhost:14265"
 # Headers for HTTP call
 HEADERS = {'Content-Type': 'application/json',
            'Accept-Charset': 'UTF-8',
-           'X-IOTA-API-Version': '1',
+           'X-IOTA-API-Version': '1'
            }
 
 USERNAME = ""
@@ -107,14 +108,14 @@ def parse_args():
     parser.add_argument("-t", "--url-timeout", type=int,
                         help="URL Timeout. Default: %ss" % URL_TIMEOUT)
 
-    # parser.add_argument("-u", "--username", type=str,
-    #                     help="IRI Username. Default: bypass")
-
-    # parser.add_argument("-p", "--password", type=str,
-    #                     help="IRI Password. Default: bypass")
-
     parser.add_argument("-o", "--obscure-address", action='store_true',
                         help="Obscure addresses. Default: Off")
+
+    parser.add_argument("-U", "--username", type=str,
+                        help="IRI Username if required.")
+
+    parser.add_argument("-P", "--password", type=str,
+                        help="IRI Password if required.")
 
     # Get configuration file if exists
     home_dir = path.expanduser("~")
@@ -122,6 +123,12 @@ def parse_args():
         sys.argv.extend(['-c', home_dir + '/.iritop'])
 
     args = parser.parse_args()
+
+    # Check if both username and password are set
+    if ((args.username and not args.password) or
+        (args.password and not args.username)):
+        argparse.ArgumentParser().error(
+            "For authentication both username and password are required")
 
     # Defaults not set by ArgumentParser so that they can
     # be overriden from command line (overrides file)
@@ -254,6 +261,8 @@ def fetch_data(data_to_send, method='POST', status_ok=200):
 
 class IriTop:
 
+    global HEADERES
+
     def __init__(self, args):
         self.term = Terminal()
         self.prev = {}
@@ -309,6 +318,12 @@ class IriTop:
         self.sortorder = None
         self.mss_0 = ""
         self.prev_ms_start = 0
+
+        # Set authentication header if required
+        if args.username is not None:
+            auth_str = '%s:%s' % (args.username, args.password)
+            auth_token = base64.b64encode(auth_str.encode("utf-8"))
+            HEADERS['Authorization'] = 'Basic %s' % auth_token.decode()
 
     @property
     def get_local_ips(self):
