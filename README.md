@@ -59,4 +59,6 @@ File should be in `yaml` format. Example:
 node: http://mynode.com:14265
 poll_delay: 2
 blink_delay: 0.3
+username: admin
+password: verySecret123
 ```

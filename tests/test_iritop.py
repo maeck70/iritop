@@ -5,6 +5,7 @@ import logging
 import time
 import json
 import sys
+from functools import wraps
 from contextlib import (contextmanager, closing)
 
 
@@ -102,6 +103,18 @@ class TestArgParser(unittest.TestCase):
         with self.assertRaises(IOError):
             self.set_new_args(['--config=unknown.yml'])
 
+    def test_password_and_username(self):
+        """
+        Test username set but not password and vice-versa
+        """
+        with self.assertRaises(SystemExit):
+            LOG.debug("Testing only username passed")
+            self.set_new_args(['--username=nobody'])
+
+        with self.assertRaises(SystemExit):
+            LOG.debug("Testing only password passed")
+            self.set_new_args(['--password=secret'])
+
 
 class TestFetchData(unittest.TestCase):
 
@@ -114,6 +127,8 @@ class TestFetchData(unittest.TestCase):
             'blink_delay': 0.5,
             'obscure_address': False,
             'test': False,  # Remove?
+            'password': 'secret',
+            'username': 'nobody'
         }
 
         """ Get free port and set node address """
@@ -175,12 +190,46 @@ def is_open(ip, port):
     except:
         return False
 
+""" Check authentication wrapper """
+def check_auth(func):
+    @wraps(func)
+    def wrapped(inst, *args, **kw):
+
+        # nobody:secret base64 encoded
+        if (inst.headers.get('Authorization') ==
+             'Basic bm9ib2R5OnNlY3JldA=='):
+
+            """ Allow if Authorization successful """
+            LOG.debug("Client authenticated: %s" %
+                      inst.client_address[0])
+
+            return func(inst, *args, **kw)
+
+        else:
+            """ Deny on wrong user:password """
+            return inst.refuse(address=inst.client_address[0],
+                               reason='Failed authentication',
+                               code=403)
+    return wrapped
+
 
 """ Handler for HTTP Server requests """
 
-
 class HTTPHandler(BaseHTTPRequestHandler):
 
+    def refuse(self, address=None, reason=None, code=401):
+        LOG.warning("HTTP: Client refused with '%s': %s" %
+                    (reason, address))
+        response = {}
+        if address is not None:
+            response['unauthorized'] = address
+
+        if reason is not None:
+            response['reason'] = reason
+
+        self.do_response(response=response, code=401)
+
+    @check_auth
     def do_POST(self):
         """ Simple POST router """
         if self.path == '/':
