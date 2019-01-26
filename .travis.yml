@@ -12,7 +12,10 @@ python:
 # command to install dependencies
 install:
   - pip install -r requirements.txt
+  - pip install flake8
 # command to run tests
 script:
   - python tests/test_iritop.py
-
+  - flake8 iritop.py
+  - flake8 tests/test_iritop.py
+  
