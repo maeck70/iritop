@@ -129,7 +129,7 @@ def parse_args():
 
     # Check if both username and password are set
     if ((args.username and not args.password) or
-        (args.password and not args.username)):
+            (args.password and not args.username)):
         argparse.ArgumentParser().error(
             "For authentication both username and password are required")
 
@@ -166,11 +166,12 @@ class LoadFromFile(argparse.Action):
 letterPairs = [[ord('A'), ord('Z')],
                [ord('a'), ord('z')],
                [ord('0'), ord('9')]]
-def scrambleCharacter(c):
 
+
+def scrambleCharacter(c):
     ci = ord(c)
 
-    for lp in letterPairs:  
+    for lp in letterPairs:
         if lp[0] <= ci <= lp[1]:
             c = chr(random.randint(lp[0], lp[1]))
             break
@@ -484,10 +485,13 @@ class IriTop:
 
                 ms_start = node["milestoneStartIndex"]
                 delta_ms_start = self.prev_ms_start - ms_start
-                self.mss_1 = self.mss_0 
-                self.mss_0 = ("%s" % ms_start) + ("" if delta_ms_start == 0 else " (%d)" % delta_ms_start)
+                self.mss_1 = self.mss_0
+                self.mss_0 = ("%s" % ms_start) + ("" if delta_ms_start == 0
+                                                  else " (%d)" %
+                                                  delta_ms_start)
                 self.show_string(3, 2, "", " "*16)
-                self.show_string(3, 2, "Milestone Start", self.mss_0, prev = self.mss_1)
+                self.show_string(3, 2, "Milestone Start", self.mss_0,
+                                 prev=self.mss_1)
 
                 self.show(4, 2, "Milestone Index", node,
                           "latestMilestoneIndex")
@@ -587,7 +591,7 @@ class IriTop:
 
         self.prev[value] = dictionary[value]
 
-    def show_string(self, row, col, label, value, prev = ""):
+    def show_string(self, row, col, label, value, prev=""):
 
         x1 = (self.width // 3) * col
         x2 = x1 + 18
@@ -599,7 +603,6 @@ class IriTop:
         print(self.term.move(row, x1) + self.term.cyan(label + ":"))
         print(self.term.move(row, x2) +
               self.term.bright_cyan(str(value) + "  "))
-
 
     def show_histogram(self, row, col, label, value, value_max,
                        warning_limit=0.8, span=1):
