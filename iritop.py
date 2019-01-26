@@ -163,10 +163,10 @@ class LoadFromFile(argparse.Action):
             parser.parse_args((k, str(v)), namespace=namespace)
 
 
+letterPairs = [[ord('A'), ord('Z')],
+               [ord('a'), ord('z')],
+               [ord('0'), ord('9')]]
 def scrambleCharacter(c):
-    letterPairs = [[ord('A'), ord('Z')],
-                   [ord('a'), ord('z')],
-                   [ord('0'), ord('9')]]
 
     ci = ord(c)
 
@@ -174,7 +174,7 @@ def scrambleCharacter(c):
         if lp[0] <= ci <= lp[1]:
             c = chr(random.randint(lp[0], lp[1]))
             break
-            
+
     return c
 
 
