@@ -355,7 +355,7 @@ class IriTop:
         stdscr.clear()
         node = None
 
-        print("IRITop connecting to node %s..." % NODE)
+        print("IRITop connecting to node %s..." % self.showAddress(NODE))
 
         with self.term.hidden_cursor():
             val = ""

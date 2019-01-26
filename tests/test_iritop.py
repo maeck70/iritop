@@ -1,3 +1,5 @@
+# flake8: noqa
+
 import socket
 import threading
 import unittest
@@ -22,7 +24,8 @@ except ImportError:
 
 
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
-import iritop  # noqa: ignore=E402
+
+import iritop # noqa
 
 LOG = logging.getLogger(__name__)
 
