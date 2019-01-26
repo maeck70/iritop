@@ -7,6 +7,7 @@ import logging
 import time
 import json
 import sys
+from os import path
 from functools import wraps
 from contextlib import (contextmanager, closing)
 
@@ -22,7 +23,6 @@ except ImportError:
     from io import StringIO  # python 3
 
 
-from os import path
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
 import iritop # noqa
