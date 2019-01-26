@@ -1,3 +1,5 @@
+# flake8: noqa
+
 import socket
 import threading
 import unittest
@@ -23,7 +25,7 @@ except ImportError:
 from os import path
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
-import iritop
+import iritop # noqa
 
 LOG = logging.getLogger(__name__)
 
@@ -214,7 +216,7 @@ def is_open(ip, port):
         s.connect((ip, int(port)))
         s.shutdown(2)
         return True
-    except:
+    except Exception:
         return False
 
 
