@@ -576,12 +576,12 @@ class IriTop:
             diff = dictionary["latestSolidSubtangleMilestoneIndex"] - \
               dictionary["latestMilestoneIndex"]
 
-            if diff != 0:
-                if diff <= 2:
-                    vs = self.term.yellow(str(dictionary[value]) + "*")
-                else:
-                    vs = self.term.yellow_on_red(
-                            str(dictionary[value]) + " (!)")
+            if diff < 0 and diff >= -2:
+                vs = self.term.yellow(
+                    str(dictionary[value]) + "*")
+            elif diff < -2:
+                vs = self.term.red(
+                        str(dictionary[value]) + " (!)")
 
         if value in self.prev and dictionary[value] != self.prev[value]:
             vs = self.term.on_blue(vs)
