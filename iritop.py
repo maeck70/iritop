@@ -117,6 +117,9 @@ def parse_args():
     parser.add_argument("-P", "--password", type=str,
                         help="IRI Password if required.")
 
+    parser.add_argument("-s", "--sort", type=int,
+                        help="Sort column # (-# for reverse sorting)")
+
     # Get configuration file if exists
     home_dir = path.expanduser("~")
     if path.isfile(home_dir + '/.iritop'):
@@ -161,22 +164,17 @@ class LoadFromFile(argparse.Action):
 
 
 def scrambleCharacter(c):
-    a1 = 65
-    a2 = 90
-    b1 = 97
-    b2 = 122
-    c1 = 48
-    c2 = 57
+    letterPairs = [[ord('A'), ord('Z')],
+                   [ord('a'), ord('z')],
+                   [ord('0'), ord('9')]]
 
     ci = ord(c)
 
-    if a1 <= ci <= a2:
-        c = chr(random.randint(a1, a2))
-    elif b1 <= ci <= b2:
-        c = chr(random.randint(b1, b2))
-    elif c1 <= ci <= c2:
-        c = chr(random.randint(c1, c2))
-
+    for lp in letterPairs:  
+        if lp[0] <= ci <= lp[1]:
+            c = chr(random.randint(lp[0], lp[1]))
+            break
+            
     return c
 
 
