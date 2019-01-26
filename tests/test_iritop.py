@@ -25,7 +25,6 @@ sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
 import iritop
 
-
 LOG = logging.getLogger(__name__)
 
 
@@ -115,6 +114,30 @@ class TestArgParser(unittest.TestCase):
             LOG.debug("Testing only password passed")
             self.set_new_args(['--password=secret'])
 
+    def test_valid_sort(self):
+        sortorderlist = ["", " "+u"\u25BC", " "+u"\u25B2"]
+        sort_tests = [
+            {'arg':1, 'col':"", 'order': sortorderlist[1]},
+            {'arg':3, 'col':"", 'order': sortorderlist[1]},
+            {'arg':-2, 'col':"", 'order': sortorderlist[2]},
+            {'arg':-4, 'col':"", 'order': sortorderlist[2]},
+            {'arg':100, 'col':"", 'order': sortorderlist[1]},
+            {'arg':-100, 'col':"", 'order': sortorderlist[1]},
+        ]
+
+        for st in sort_tests:            
+            LOG.debug("Testing Sort on column: '%s'" % st['arg'])
+            self.set_new_args(['--sort=%s' % st['arg']])
+            it =  iritop.IriTop(self.args)
+            idx = abs(int(st['arg']))-1
+            try:
+                st['col'] = it.txkeys[idx]['sortcolumn']
+            except IndexError:
+                st['col'] = it.txkeys[0]['sortcolumn']                
+            LOG.debug("Sort column: %s (%s)" % (it.sortcolumn, "reverse" if
+                it.sortorder==sortorderlist[1] else "forward"))
+            self.assertEqual(it.sortcolumn, st['col'])
+
 
 class TestFetchData(unittest.TestCase):
 
@@ -128,7 +151,8 @@ class TestFetchData(unittest.TestCase):
             'obscure_address': False,
             'test': False,  # Remove?
             'password': 'secret',
-            'username': 'nobody'
+            'username': 'nobody',
+            'sort': 3
         }
 
         """ Get free port and set node address """
