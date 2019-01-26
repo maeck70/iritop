@@ -323,9 +323,9 @@ class IriTop:
             try:
                 if args.sort < 0:
                     self.sortorder = self.sortorderlist[1]
-                    args.sort = args.sort * -1
                 else:
                     self.sortorder = self.sortorderlist[2]
+                args.sort = abs(args.sort)
                 self.sortcolumn = self.txkeys[args.sort-1]['sortcolumn']
             except IndexError:
                 self.sortcolumn = self.txkeys[0]['sortcolumn']
