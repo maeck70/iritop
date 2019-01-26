@@ -14,7 +14,7 @@ from os import (path, environ, getloadavg)
 from curses import wrapper
 
 
-__VERSION__ = '0.5.2'
+__VERSION__ = '0.5.3'
 
 """\
 Simple Iota IRI Node Monitor
@@ -316,6 +316,18 @@ class IriTop:
         self.sortorder = None
         self.mss_0 = ""
         self.prev_ms_start = 0
+
+        # Initiate column sort
+        if args.sort:
+            try:
+                if args.sort < 0:
+                    self.sortorder = self.sortorderlist[1]
+                    args.sort = args.sort * -1
+                else:
+                    self.sortorder = self.sortorderlist[2]
+                self.sortcolumn = self.txkeys[args.sort-1]['sortcolumn']
+            except IndexError:
+                self.sortcolumn = self.txkeys[0]['sortcolumn']
 
         # Set authentication header if required
         if args.username is not None:

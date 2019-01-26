@@ -44,9 +44,13 @@ pip install -r requirements.txt
                         blink delay. Default: 0.5s
   -t URL_TIMEOUT, --url-timeout URL_TIMEOUT
                         URL Timeout. Default: 5s
-  -o OBSCURE_TOGGLE, --obscure-address OBSCURE_TOGGLE
+  -o, --obscure-address
                         Obscure addresses. Default: Off
-
+  -U USERNAME, --username USERNAME
+                        IRI Username if required.
+  -P PASSWORD, --password PASSWORD
+                        IRI Password if required.
+  -s SORT, --sort SORT  Sort column # (-# for reverse sorting)
 ```
 
 ## Configuration File
@@ -61,4 +65,5 @@ poll_delay: 2
 blink_delay: 0.3
 username: admin
 password: verySecret123
+sort: -3
 ```
