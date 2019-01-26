@@ -5,6 +5,7 @@ import logging
 import time
 import json
 import sys
+from os import path
 from functools import wraps
 from contextlib import (contextmanager, closing)
 
@@ -20,10 +21,8 @@ except ImportError:
     from io import StringIO  # python 3
 
 
-from os import path
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
-
-import iritop
+import iritop  # noqa: ignore=E402
 
 LOG = logging.getLogger(__name__)
 
@@ -214,7 +213,7 @@ def is_open(ip, port):
         s.connect((ip, int(port)))
         s.shutdown(2)
         return True
-    except:
+    except Exception:
         return False
 
 
