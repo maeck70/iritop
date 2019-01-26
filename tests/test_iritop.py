@@ -102,17 +102,17 @@ class TestArgParser(unittest.TestCase):
         with self.assertRaises(IOError):
             self.set_new_args(['--config=unknown.yml'])
 
-    # def test_password_and_username(self):
-    #     """
-    #     Test username set but not password and vice-versa
-    #     """
-    #     with self.assertRaises(SystemExit):
-    #         LOG.debug("Testing only username passed")
-    #         self.set_new_args(['--username=nobody'])
+    def test_password_and_username(self):
+        """
+        Test username set but not password and vice-versa
+        """
+        with self.assertRaises(SystemExit):
+            LOG.debug("Testing only username passed")
+            self.set_new_args(['--username=nobody'])
 
-    #     with self.assertRaises(SystemExit):
-    #         LOG.debug("Testing only password passed")
-    #         self.set_new_args(['--password=secret'])
+        with self.assertRaises(SystemExit):
+            LOG.debug("Testing only password passed")
+            self.set_new_args(['--password=secret'])
 
     def test_valid_sort(self):
         sortorderlist = ["", " "+u"\u25BC", " "+u"\u25B2"]
