@@ -14,7 +14,7 @@ from os import (path, environ, getloadavg)
 from curses import wrapper
 
 
-__VERSION__ = '0.5.3'
+__VERSION__ = '0.5.4'
 
 """\
 Simple Iota IRI Node Monitor
@@ -399,7 +399,9 @@ class IriTop:
                 self.oldheight, self.oldwidth = self.height, self.width
                 self.height, self.width = self.term.height, self.term.width
 
-                if int(time.time()) - tlast > self.poll_delay:
+                time_past = int(time.time()) - tlast
+                time_remain = self.poll_delay - time_past
+                if time_past > self.poll_delay:
 
                     if node:
                         self.prev_ms_start = node["milestoneStartIndex"]
@@ -458,6 +460,9 @@ class IriTop:
                 print(self.term.move(0, 0) + self.term.black_on_cyan(
                       "IRITop - Simple IOTA IRI Node Monitor (%s)"
                       .ljust(self.width) % __VERSION__))
+                s = str(time_remain+1) if time_remain >= 0 else 'fetch'
+                print(self.term.move(0, self.width-6) +
+                      self.term.black_on_cyan(s.rjust(6)))
 
                 for neighbor in neighbors:
                     for txkey in self.txkeys[1:]:
