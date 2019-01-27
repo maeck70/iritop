@@ -460,7 +460,7 @@ class IriTop:
                 print(self.term.move(0, 0) + self.term.black_on_cyan(
                       "IRITop - Simple IOTA IRI Node Monitor (%s)"
                       .ljust(self.width) % __VERSION__))
-                s = str(time_remain+1) if time_remain >= 0 else 'fetch'
+                s = str(time_remain) if time_remain > 0 else 'fetch'
                 print(self.term.move(0, self.width-6) +
                       self.term.black_on_cyan(s.rjust(6)))
 
