@@ -589,8 +589,8 @@ class IriTop:
             elif diff < -2:
                 vs = self.term.red(
                         str(dictionary[value]) + " (!)")
-	    else:
-		vs = str(dictionary[value]) + "    "
+            else:
+                vs = str(dictionary[value]) + "    "
 
         if value in self.prev and dictionary[value] != self.prev[value]:
             vs = self.term.on_blue(vs)
@@ -640,13 +640,13 @@ class IriTop:
             mG = 0
 
         print(self.term.move(row, x1) + self.term.cyan(label + ":"))
-        print(self.term.move(row, x2)
-              + self.term.white("[")
-              + self.term.green("|" * mG)
-              + self.term.yellow("|" * mY)
-              + self.term.red("#" * mR)
-              + self.term.bright_black("-" * mB)
-              + self.term.white("]"))
+        print(self.term.move(row, x2) +
+              self.term.white("[") +
+              self.term.green("|" * mG) +
+              self.term.yellow("|" * mY) +
+              self.term.red("#" * mR) +
+              self.term.bright_black("-" * mB) +
+              self.term.white("]"))
 
     def show_neighbors(self, row, neighbors):
         global ITER
