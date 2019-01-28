@@ -585,16 +585,18 @@ class IriTop:
 
             if diff < 0 and diff >= -2:
                 vs = self.term.yellow(
-                    str(dictionary[value]) + "*")
+                    str(dictionary[value]) + "*   ")
             elif diff < -2:
                 vs = self.term.red(
                         str(dictionary[value]) + " (!)")
+	    else:
+		vs = str(dictionary[value]) + "    "
 
         if value in self.prev and dictionary[value] != self.prev[value]:
             vs = self.term.on_blue(vs)
 
         print(self.term.move(row, x1) + self.term.cyan(label + ":"))
-        print(self.term.move(row, x2) + vs + "  ")
+        print(self.term.move(row, x2) + vs)
 
         self.prev[value] = dictionary[value]
 
