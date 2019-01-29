@@ -74,7 +74,7 @@ class TestArgParser(unittest.TestCase):
         ]
 
         for node in valid_node_urls:
-            LOG.debug("Testing URL: '%s'" % node)
+            LOG.info("Testing URL: '%s'" % node)
             self.set_new_args(['--node=' + node])
             self.assertEqual(self.args.node, node)
 
@@ -91,7 +91,7 @@ class TestArgParser(unittest.TestCase):
 
         for node in invalid_node_urls:
             with self.assertRaises(SystemExit):
-                LOG.debug("Testing invalid URL: '%s'" % node)
+                LOG.info("Testing invalid URL: '%s'" % node)
                 self.set_new_args(['--node=' + node])
 
     def test_return_version_string(self):
@@ -116,11 +116,11 @@ class TestArgParser(unittest.TestCase):
         Test username set but not password and vice-versa
         """
         with self.assertRaises(SystemExit):
-            LOG.debug("Testing only username passed")
+            LOG.info("Testing only username passed")
             self.set_new_args(['--username=nobody'])
 
         with self.assertRaises(SystemExit):
-            LOG.debug("Testing only password passed")
+            LOG.info("Testing only password passed")
             self.set_new_args(['--password=secret'])
 
     def test_valid_sort(self):
@@ -135,7 +135,7 @@ class TestArgParser(unittest.TestCase):
         ]
 
         for st in sort_tests:
-            LOG.debug("Testing Sort on column: '%s'" % st['arg'])
+            LOG.info("Testing Sort on column: '%s'" % st['arg'])
             self.set_new_args(['--sort=%s' % st['arg']])
             it = iritop.IriTop(self.args)
             idx = abs(int(st['arg']))-1
@@ -143,7 +143,7 @@ class TestArgParser(unittest.TestCase):
                 st['col'] = it.txkeys[idx]['sortcolumn']
             except IndexError:
                 st['col'] = it.txkeys[0]['sortcolumn']
-            LOG.debug("Sort column: %s (%s)" % (it.sortcolumn, "reverse" if
+            LOG.info("Sort column: %s (%s)" % (it.sortcolumn, "reverse" if
                                                 it.sortorder ==
                                                 sortorderlist[1]
                                                 else "forward"))
@@ -189,7 +189,7 @@ class TestFetchData(unittest.TestCase):
             target=self.server.serve_until_shutdown)
         self.server_thread.daemon = True
         self.server_thread.start()
-        LOG.debug("Started test HTTP server at port %d" % self.free_port)
+        LOG.info("Started test HTTP server at port %d" % self.free_port)
 
     def test_get_neighbors(self):
         result = iritop.fetch_data({'command': 'getNeighbors'})
@@ -440,7 +440,7 @@ class HTTPHandler(BaseHTTPRequestHandler):
     def _process_data(self, data):
         code = 200
 
-        #LOG.debug("Server got data: '%s'" % data)
+        LOG.debug("Server got data: '%s'" % data)
         if 'command' not in data:
             self.do_response(response={"error": "missing command"}, code=400)
 
@@ -448,7 +448,7 @@ class HTTPHandler(BaseHTTPRequestHandler):
         # help mimic real API port query over time
         if data['command'] == 'getNeighbors':
             if self.neighbor_data.get_data.calls % 5 == 0:
-                #LOG.debug("Increase or decrease neighbor count")
+                LOG.debug("Increase or decrease neighbor count")
                 self.neighbor_data.rand_neighbors_count()
             response = {"duration": 0,
                         "neighbors": self.neighbor_data.get_data()}
@@ -468,6 +468,9 @@ class HTTPHandler(BaseHTTPRequestHandler):
         self.send_response(code)
         self.send_header('Content-type', 'application/json')
         self.end_headers()
+
+    def log_message(self, format, *args):
+        return
 
 
 """ HTTP test server """
@@ -511,5 +514,5 @@ class Struct:
 if __name__ == '__main__':
     logging.basicConfig(stream=sys.stderr,
                         format='[%(levelname)s] %(message)s')
-    logging.getLogger(__name__).setLevel(logging.DEBUG)
+    logging.getLogger(__name__).setLevel(logging.INFO)
     unittest.main()
