@@ -121,15 +121,6 @@ def parse_args():
     parser.add_argument("-s", "--sort", type=int,
                         help="Sort column # (-# for reverse sorting)")
 
-    """
-    Terminal types supported by the system can normally be
-    found via 'find /usr/share/terminfo -type f -printf "%f\n"'
-    As an example setting to vt200 ensures no color output.
-    """
-    parser.add_argument("--term", type=str,
-                        default=getenv('TERM', 'xterm'),
-                        help="Type of terminal to use. Default: %(default)s")
-
     # Get configuration file if exists
     home_dir = path.expanduser("~")
     if path.isfile(home_dir + '/.iritop'):
@@ -276,17 +267,23 @@ class IriTop:
 
     def __init__(self, args):
 
-        """ Set TERM environment variable """
-        environ['TERM'] = args.term
-
-        """ Instantiate terminal class """
+        """
+        This instantiates the Terminal class from blessed.
+        Terminal type can be forced via TERM environment variable.
+        Terminal types supported by the system can normally be
+        found via 'find /usr/share/terminfo -type f -printf "%f\n"'
+        As an example setting to vt200 ensures no color output.
+        """
         self.term = Terminal()
 
         self.prev = {}
         self.poll_delay = args.poll_delay
         self.blink_delay = args.blink_delay
+
+        """ The commands sent in the query to the node """
         self.commands = [{'command': 'getNeighbors'},
                          {'command': 'getNodeInfo'}]
+
         self.txkeys = [{'keyshort': 'ad', 'sortkey': '1',
                         'header': 'Neighbor Address',
                         'key': 'neighborAddress', 'col': 0,
@@ -368,9 +365,12 @@ class IriTop:
 
     def run(self, stdscr):
 
+        """ Clear the screen on start """
         stdscr.clear()
-        node = None
+
+        """ Counter for number of cycles """
         cycles = 0
+        node = None
 
         print("IRITop connecting to node %s..." % self.showAddress(NODE))
 
