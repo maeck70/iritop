@@ -590,13 +590,14 @@ class IriTop:
                 vs = self.term.red(
                         str(dictionary[value]) + " (!)")
             else:
-                vs = str(dictionary[value]) + "    "
+                vs = str(dictionary[value])
+            print(self.term.move(row, x2) + " "*(len(vs)+4))
 
         if value in self.prev and dictionary[value] != self.prev[value]:
             vs = self.term.on_blue(vs)
 
         print(self.term.move(row, x1) + self.term.cyan(label + ":"))
-        print(self.term.move(row, x2) + vs)
+        print(self.term.move(row, x2) + self.term.bright_cyan(vs))
 
         self.prev[value] = dictionary[value]
 
