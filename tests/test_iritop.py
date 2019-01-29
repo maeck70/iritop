@@ -163,8 +163,7 @@ class TestFetchData(unittest.TestCase):
             'test': False,  # Remove?
             'password': 'secret',
             'username': 'nobody',
-            'sort': 3,
-            'term': 'fake'
+            'sort': 3
         }
 
         """ Get free port and set node address """
