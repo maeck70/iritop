@@ -15,11 +15,6 @@ from contextlib import (contextmanager, closing)
 
 
 try:
-    from mock import patch, Mock, MagicMock
-except ImportError:
-    from unittest.mock import patch, Mock, MagicMock  # python 3
-
-try:
     from BaseHTTPServer import (BaseHTTPRequestHandler, HTTPServer)
 except ImportError:
     from http.server import (BaseHTTPRequestHandler, HTTPServer)  # python 3
