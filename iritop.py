@@ -480,7 +480,7 @@ class IriTop:
 
                 if ((self.oldheight != self.height) or
                         (self.oldwidth != self.width)):
-                        print(self.term.clear)
+                    print(self.term.clear)
 
                 print(self.term.move(0, 0) + self.term.black_on_cyan(
                       "IRITop - Simple IOTA IRI Node Monitor (%s)"
