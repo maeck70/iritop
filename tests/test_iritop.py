@@ -4,11 +4,13 @@ import socket
 import threading
 import unittest
 import logging
+import random
 import time
 import json
 import sys
-from os import path
+from os import (path, environ)
 from functools import wraps
+from blessed import Terminal
 from contextlib import (contextmanager, closing)
 
 
@@ -67,7 +69,7 @@ class TestArgParser(unittest.TestCase):
         ]
 
         for node in valid_node_urls:
-            LOG.debug("Testing URL: '%s'" % node)
+            LOG.info("Testing URL: '%s'" % node)
             self.set_new_args(['--node=' + node])
             self.assertEqual(self.args.node, node)
 
@@ -84,7 +86,7 @@ class TestArgParser(unittest.TestCase):
 
         for node in invalid_node_urls:
             with self.assertRaises(SystemExit):
-                LOG.debug("Testing invalid URL: '%s'" % node)
+                LOG.info("Testing invalid URL: '%s'" % node)
                 self.set_new_args(['--node=' + node])
 
     def test_return_version_string(self):
@@ -109,11 +111,11 @@ class TestArgParser(unittest.TestCase):
         Test username set but not password and vice-versa
         """
         with self.assertRaises(SystemExit):
-            LOG.debug("Testing only username passed")
+            LOG.info("Testing only username passed")
             self.set_new_args(['--username=nobody'])
 
         with self.assertRaises(SystemExit):
-            LOG.debug("Testing only password passed")
+            LOG.info("Testing only password passed")
             self.set_new_args(['--password=secret'])
 
     def test_valid_sort(self):
@@ -128,7 +130,7 @@ class TestArgParser(unittest.TestCase):
         ]
 
         for st in sort_tests:
-            LOG.debug("Testing Sort on column: '%s'" % st['arg'])
+            LOG.info("Testing Sort on column: '%s'" % st['arg'])
             self.set_new_args(['--sort=%s' % st['arg']])
             it = iritop.IriTop(self.args)
             idx = abs(int(st['arg']))-1
@@ -136,7 +138,7 @@ class TestArgParser(unittest.TestCase):
                 st['col'] = it.txkeys[idx]['sortcolumn']
             except IndexError:
                 st['col'] = it.txkeys[0]['sortcolumn']
-            LOG.debug("Sort column: %s (%s)" % (it.sortcolumn, "reverse" if
+            LOG.info("Sort column: %s (%s)" % (it.sortcolumn, "reverse" if
                                                 it.sortorder ==
                                                 sortorderlist[1]
                                                 else "forward"))
@@ -182,27 +184,39 @@ class TestFetchData(unittest.TestCase):
             target=self.server.serve_until_shutdown)
         self.server_thread.daemon = True
         self.server_thread.start()
-        LOG.debug("Started test HTTP server at port %d" % self.free_port)
+        LOG.info("Started test HTTP server at port %d" % self.free_port)
 
     def test_get_neighbors(self):
         result = iritop.fetch_data({'command': 'getNeighbors'})
         LOG.debug("getNeighbors result: %s" % str(result))
 
-        """ Simply test expected number of keys returned from data """
-        self.assertEqual(len(result[0][0].keys()), 8)
+        """ Simply test neighbors key exists in result """
+        self.assertIn('neighbors', result[0])
 
     def test_get_node_info(self):
         result = iritop.fetch_data({'command': 'getNodeInfo'})
         LOG.debug("getNodeInfo result: %s" % str(result))
 
-        """ Simply test expected number of keys returned from data """
-        self.assertEqual(len(result[0].keys()), 20)
+        """ Simply test appName key exists in result """
+        self.assertIn('appName', result[0])
 
     def test_bad_request(self):
         """ Test bad request """
         with self.assertRaises(Exception):
             result = iritop.fetch_data({'command': 'invalid'})
             result = result
+
+    def test_run_for_a_while(self):
+        iritop.MAX_CYCLES = 10
+
+        """ Return None = exited without errors """
+        self.assertEqual(self.iri_top.run(FakeSCR), None)
+
+
+class FakeSCR:
+    @staticmethod
+    def clear():
+        pass
 
 
 # END TEST CASES
@@ -221,8 +235,6 @@ def is_open(ip, port):
 
 
 """ Check authentication wrapper """
-
-
 def check_auth(func):
     @wraps(func)
     def wrapped(inst, *args, **kw):
@@ -245,10 +257,157 @@ def check_auth(func):
     return wrapped
 
 
+""" Random Data Generators """
+def counted(f):
+    def wrapped(*args, **kwargs):
+        wrapped.calls += 1
+        return f(*args, **kwargs)
+    wrapped.calls = 1
+    return wrapped
+
+
+def increment(f):
+    def wrapped(*args, **kwargs):
+        args[0]._increment_data()
+        return f(*args, **kwargs)
+    return wrapped
+
+
+class Neighbor:
+
+    protocol = ('udp', 'tcp')
+
+    def __init__(self, count):
+        self.neighbor_data = {
+            "address": "someneighbor%d:%d" % (count, random.randint(21600, 25600)),
+            "connectionType": self.protocol[random.randint(0, 1)],
+            "numberOfAllTransactions": random.randint(100000, 200000),
+            "numberOfInvalidTransactions": random.randint(0, 3),
+            "numberOfNewTransactions": random.randint(10, 20000),
+            "numberOfRandomTransactionRequests": random.randint(100, 20000),
+            "numberOfSentTransactions": random.randint(100000, 200000),
+            "numberOfStaleTransactions": random.randint(100, 2000)
+        }
+
+    def _increment_data(self):
+        self.neighbor_data = {
+            "address": self.neighbor_data['address'],
+            "connectionType": self.neighbor_data['connectionType'],
+            "numberOfAllTransactions": random.randint(
+                self.neighbor_data['numberOfAllTransactions'] + 10,
+                self.neighbor_data['numberOfAllTransactions'] + 200
+            ),
+            "numberOfInvalidTransactions": random.randint(
+                self.neighbor_data['numberOfInvalidTransactions'] + 0,
+                self.neighbor_data['numberOfInvalidTransactions'] + 1
+            ),
+            "numberOfNewTransactions": random.randint(
+                self.neighbor_data['numberOfNewTransactions'] + 10,
+                self.neighbor_data['numberOfNewTransactions'] + 200
+            ),
+            "numberOfRandomTransactionRequests": random.randint(
+                self.neighbor_data['numberOfRandomTransactionRequests'] + 1,
+                self.neighbor_data['numberOfRandomTransactionRequests'] + 4
+            ),
+            "numberOfSentTransactions": random.randint(
+                self.neighbor_data['numberOfSentTransactions'] + 10,
+                self.neighbor_data['numberOfSentTransactions'] + 500
+            ),
+            "numberOfStaleTransactions": random.randint(
+                self.neighbor_data['numberOfStaleTransactions'] + 0,
+                self.neighbor_data['numberOfStaleTransactions'] + 2
+            )
+        }
+
+    @increment
+    def get_data(self):
+        return self.neighbor_data
+
+    def __str__(self):
+        return str(self.neighbor_data)
+
+
+class RandomNeighborDataGenerator():
+
+    def __init__(self):
+        # Generate a random number of initial neighbors
+        self.neighbors = [Neighbor(n) for n in range(1, random.randint(2, 6))]
+
+    def rand_neighbors_count(self):
+        # Randominze increase or decrease of neighbors
+        if random.randint(0, 1) == 0 and len(self.neighbors) >= 2:
+            del self.neighbors[ random.randint(0, len(self.neighbors)-1) ]
+        else:
+            self.neighbors.append(Neighbor(len(self.neighbors) + 1))
+
+    @counted
+    def get_data(self):
+        return [n.get_data() for n in self.neighbors]
+
+    def get_neighbors_count(self):
+        return len(self.neighbors)
+
+
+class RandomAPIDataGenerator():
+
+    def __init__(self, neighbors_count):
+        self.get_neighbors_count = neighbors_count
+        self.api_data = {
+            "appName": "IRI",
+            "appVersion": "1.5.6-RELEASE",
+            "coordinatorAddress": "KPWCHICGJZXKE9GSUDXZYUAPLHAKAHYHDXNP" +
+                                  "HENTERYMMBQOPSQIDENXKLKCEYCPVTZQLEEJ" +
+                                  "VYJZV9BWU",
+            "duration": 0,
+            "features": [
+                "snapshotPruning",
+                "dnsRefresher",
+                "zeroMessageQueue",
+                "tipSolidification"
+            ],
+            "jreAvailableProcessors": 4,
+            "jreFreeMemory": random.randint(400000000, 600000000),
+            "jreMaxMemory": 3221225472,
+            "jreTotalMemory": random.randint(2000000000, 2500000000),
+            "jreVersion": "1.8.0_201",
+            "latestMilestone": "WWUOHJKZHJRDTIYSGYRIEUFCOJIJYGZJNPMRVNP" +
+                               "OWQPOJAOGORXYRTWTPDXKLUJQ99YVUPKGZJXO" +
+                               "99999",
+            "latestMilestoneIndex": 933210,
+            "latestSolidSubtangleMilestone": "KRNMNTGO9RWUJRQQKFTXVVX9K" +
+                                             "LAHQQSJGCJYTNIPUSGODMMOUW" +
+                                             "ZLNAEUJE9APAGSMUDAGQPJVNH" +
+                                             "V99999",
+            "latestSolidSubtangleMilestoneIndex": 933210,
+            "milestoneStartIndex": 933210,
+            "neighbors": self.get_neighbors_count(),
+            "packetsQueueSize": 0,
+            "time": int(round(time.time() * 1000)),
+            "tips": random.randint(1000, 5000),
+            "transactionsToRequest": random.randint(0, 100)
+        }
+
+    def _increment_data(self):
+        self.api_data['jreFreeMemory'] = random.randint(400000000, 600000000)
+        self.api_data['jreTotalMemory'] = random.randint(2000000000, 2500000000)
+        self.api_data['latestMilestoneIndex'] += 1
+        self.api_data['latestSolidSubtangleMilestoneIndex'] += 1
+        self.api_data['neighbors'] = self.get_neighbors_count()
+        self.api_data['time'] = int(round(time.time() * 1000))
+        self.api_data['tips'] = random.randint(1000, 5000)
+        self.api_data['transactionsToRequest'] = random.randint(0, 100)
+
+    @increment
+    def get_data(self):
+        return self.api_data
+
+
 """ Handler for HTTP Server requests """
-
-
 class HTTPHandler(BaseHTTPRequestHandler):
+
+    neighbor_data = RandomNeighborDataGenerator()
+    api_data = RandomAPIDataGenerator(
+            neighbor_data.get_neighbors_count)
 
     def refuse(self, address=None, reason=None, code=401):
         LOG.warning("HTTP: Client refused with '%s': %s" %
@@ -274,6 +433,8 @@ class HTTPHandler(BaseHTTPRequestHandler):
             self.do_response(code=404)
 
     def _process_data(self, data):
+        code = 200
+
         LOG.debug("Server got data: '%s'" % data)
         if 'command' not in data:
             self.do_response(response={"error": "missing command"}, code=400)
@@ -281,62 +442,13 @@ class HTTPHandler(BaseHTTPRequestHandler):
         # Optionally increment data values here to
         # help mimic real API port query over time
         if data['command'] == 'getNeighbors':
-            code = 200
-            response = [{
-                "address": "vmi11111.testserver.net:14600",
-                "connectionType": "udp",
-                "numberOfAllTransactions": 123280,
-                "numberOfInvalidTransactions": 0,
-                "numberOfNewTransactions": 22093,
-                "numberOfRandomTransactionRequests": 1097,
-                "numberOfSentTransactions": 110276,
-                "numberOfStaleTransactions": 3413
-            }, {
-                "address": "node03.testserver.nl:15700",
-                "connectionType": "tcp",
-                "numberOfAllTransactions": 122298,
-                "numberOfInvalidTransactions": 0,
-                "numberOfNewTransactions": 17055,
-                "numberOfRandomTransactionRequests": 1095,
-                "numberOfSentTransactions": 109190,
-                "numberOfStaleTransactions": 3798
-            }]
+            if self.neighbor_data.get_data.calls % 5 == 0:
+                LOG.debug("Increase or decrease neighbor count")
+                self.neighbor_data.rand_neighbors_count()
+            response = {"duration": 0,
+                        "neighbors": self.neighbor_data.get_data()}
         elif data['command'] == 'getNodeInfo':
-            code = 200
-            response = {
-                "appName": "IRI",
-                "appVersion": "1.5.6-RELEASE",
-                "coordinatorAddress": "KPWCHICGJZXKE9GSUDXZYUAPLHAKAHYHDXNP" +
-                                      "HENTERYMMBQOPSQIDENXKLKCEYCPVTZQLEEJ" +
-                                      "VYJZV9BWU",
-                "duration": 0,
-                "features": [
-                    "snapshotPruning",
-                    "dnsRefresher",
-                    "zeroMessageQueue",
-                    "tipSolidification"
-                ],
-                "jreAvailableProcessors": 4,
-                "jreFreeMemory": 585111872,
-                "jreMaxMemory": 3221225472,
-                "jreTotalMemory": 2013265920,
-                "jreVersion": "1.8.0_191",
-                "latestMilestone": "WWUOHJKZHJRDTIYSGYRIEUFCOJIJYGZJNPMRVNP" +
-                                   "OWQPOJAOGORXYRTWTPDXKLUJQ99YVUPKGZJXO" +
-                                   "99999",
-                "latestMilestoneIndex": 968273,
-                "latestSolidSubtangleMilestone": "KRNMNTGO9RWUJRQQKFTXVVX9K" +
-                                                 "LAHQQSJGCJYTNIPUSGODMMOUW" +
-                                                 "ZLNAEUJE9APAGSMUDAGQPJVNH" +
-                                                 "V99999",
-                "latestSolidSubtangleMilestoneIndex": 968272,
-                "milestoneStartIndex": 933210,
-                "neighbors": 8,
-                "packetsQueueSize": 0,
-                "time": 1547589763171,
-                "tips": 3601,
-                "transactionsToRequest": 51
-            }
+            response = self.api_data.get_data()
         else:
             response = {"error": "invalid command"}
             code = 400
@@ -351,6 +463,9 @@ class HTTPHandler(BaseHTTPRequestHandler):
         self.send_response(code)
         self.send_header('Content-type', 'application/json')
         self.end_headers()
+
+    def log_message(self, format, *args):
+        return
 
 
 """ HTTP test server """
@@ -394,5 +509,5 @@ class Struct:
 if __name__ == '__main__':
     logging.basicConfig(stream=sys.stderr,
                         format='[%(levelname)s] %(message)s')
-    logging.getLogger(__name__).setLevel(logging.DEBUG)
+    logging.getLogger(__name__).setLevel(logging.INFO)
     unittest.main()

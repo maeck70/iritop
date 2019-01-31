@@ -10,11 +10,11 @@ import yaml
 import random
 import base64
 from subprocess import check_output
-from os import (path, environ, getloadavg)
+from os import (path, environ, getloadavg, getenv)
 from curses import wrapper
 
 
-__VERSION__ = '0.5.4'
+__VERSION__ = '0.5.5'
 
 """\
 Simple Iota IRI Node Monitor
@@ -71,6 +71,7 @@ OBSCURE_TOGGLE = 0
 ITER = 0
 MB = 1024 * 1024
 EXIT_MSG = ""
+MAX_CYCLES = getenv('MAX_CYCLES', '0')
 
 
 def parse_args():
@@ -265,12 +266,24 @@ class IriTop:
     global HEADERES
 
     def __init__(self, args):
+
+        """
+        This instantiates the Terminal class from blessed.
+        Terminal type can be forced via TERM environment variable.
+        Terminal types supported by the system can normally be
+        found via 'find /usr/share/terminfo -type f -printf "%f\n"'
+        As an example setting to vt200 ensures no color output.
+        """
         self.term = Terminal()
+
         self.prev = {}
         self.poll_delay = args.poll_delay
         self.blink_delay = args.blink_delay
+
+        """ The commands sent in the query to the node """
         self.commands = [{'command': 'getNeighbors'},
                          {'command': 'getNodeInfo'}]
+
         self.txkeys = [{'keyshort': 'ad', 'sortkey': '1',
                         'header': 'Neighbor Address',
                         'key': 'neighborAddress', 'col': 0,
@@ -352,7 +365,11 @@ class IriTop:
 
     def run(self, stdscr):
 
+        """ Clear the screen on start """
         stdscr.clear()
+
+        """ Counter for number of cycles """
+        cycles = 0
         node = None
 
         print("IRITop connecting to node %s..." % self.showAddress(NODE))
@@ -361,8 +378,11 @@ class IriTop:
             val = ""
             tlast = 0
             self.hist = {}
-
             while val.lower() != 'q':
+
+                """ Exit if max cycles specified """
+                if int(MAX_CYCLES) != 0 and cycles >= int(MAX_CYCLES):
+                    break
 
                 random.seed(self.randSeed)
 
@@ -406,12 +426,17 @@ class IriTop:
                     if node:
                         self.prev_ms_start = node["milestoneStartIndex"]
 
+                    """ Query data from node, save duration """
                     startTime = int(round(time.time() * 1000))
                     results = [fetch_data(self.commands[i]) for i
                                in range(len(self.commands))]
                     endTime = int(round(time.time() * 1000))
                     self.logDuration(endTime - startTime)
 
+                    """ Increase iteration cycle """
+                    cycles += 1
+
+                    """ Process response data """
                     neighbors = None
                     node = None
                     for data, e in results:
